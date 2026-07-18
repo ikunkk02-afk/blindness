@@ -1,0 +1,10 @@
+{
+  "name": "cane_tap", "author": "ikunkk02-afk", "description": "Original guidance cane tap animation",
+  "emote": { "isLoop": "false", "returnTick": 0, "beginTick": 0, "endTick": 8, "stopTick": 10, "degrees": false,
+    "moves": [
+      { "tick": 0, "easing": "EASEINOUTQUAD", "rightArm": { "pitch": -0.6, "yaw": -0.15 } },
+      { "tick": 5, "easing": "EASEOUTQUAD", "rightArm": { "pitch": -1.25, "yaw": -0.3 }, "torso": { "yaw": -0.12 } },
+      { "tick": 10, "easing": "EASEINOUTQUAD", "rightArm": { "pitch": 0.0, "yaw": 0.0 }, "torso": { "yaw": 0.0 } }
+    ]
+  }
+}

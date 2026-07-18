@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.ikunkk02afk.blindness.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["PlayerEntityMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

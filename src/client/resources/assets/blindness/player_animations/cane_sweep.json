@@ -1,0 +1,11 @@
+{
+  "name": "cane_sweep", "author": "ikunkk02-afk", "description": "Original left-to-right cane sweep animation",
+  "emote": { "isLoop": "false", "returnTick": 0, "beginTick": 0, "endTick": 18, "stopTick": 20, "degrees": false,
+    "moves": [
+      { "tick": 0, "easing": "EASEINOUTQUAD", "rightArm": { "pitch": -1.0, "yaw": 0.75 }, "torso": { "yaw": 0.25 } },
+      { "tick": 10, "easing": "LINEAR", "rightArm": { "pitch": -1.2, "yaw": 0.0 }, "torso": { "yaw": 0.0 } },
+      { "tick": 18, "easing": "EASEOUTQUAD", "rightArm": { "pitch": -1.0, "yaw": -0.75 }, "torso": { "yaw": -0.25 } },
+      { "tick": 20, "easing": "EASEINOUTQUAD", "rightArm": { "pitch": 0.0, "yaw": 0.0 }, "torso": { "yaw": 0.0 } }
+    ]
+  }
+}

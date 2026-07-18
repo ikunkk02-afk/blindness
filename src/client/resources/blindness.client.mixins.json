@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.ikunkk02afk.blindness.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["CameraMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

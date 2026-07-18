@@ -1,0 +1,11 @@
+{
+  "renderStage": "after_level",
+  "priority": 2000,
+  "stages": [
+    {
+      "type": "veil:blit",
+      "shader": "blindness:blindness_depth",
+      "in": "minecraft:main"
+    }
+  ]
+}

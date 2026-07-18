@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "blindness",
+  "version": "${version}",
+  "name": "失明症",
+  "description": "A gameplay-focused simulation of severe visual impairment using sound, memory, and a guidance cane.",
+  "authors": ["ikunkk02-afk"],
+  "contact": {
+    "sources": "https://github.com/ikunkk02-afk/blindness",
+    "issues": "https://github.com/ikunkk02-afk/blindness/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/blindness/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.ikunkk02afk.blindness.BlindnessMod"],
+    "client": ["com.ikunkk02afk.blindness.client.BlindnessClient"],
+    "cardinal-components-entity": ["com.ikunkk02afk.blindness.component.BlindnessComponents"]
+  },
+  "mixins": [
+    "blindness.mixins.json",
+    { "config": "blindness.client.mixins.json", "environment": "client" }
+  ],
+  "custom": {
+    "cardinal-components": ["blindness:player"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": ">=0.116.14+1.21.1",
+    "cardinal-components-base": ">=6.1.3",
+    "cardinal-components-entity": ">=6.1.3",
+    "owo": ">=0.12.15.4+1.21"
+  },
+  "recommends": {
+    "veil": ">=4.3.0",
+    "playeranimator": ">=2.0.4+1.21.1"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "renderStage": "after_level",
+  "dynamicBuffers": ["normal"],
+  "priority": 2000,
+  "stages": [
+    {
+      "type": "veil:blit",
+      "shader": "blindness:blindness",
+      "in": "minecraft:main"
+    }
+  ]
+}

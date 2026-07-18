@@ -1,0 +1,10 @@
+{
+  "name": "get_up", "author": "ikunkk02-afk", "description": "Original recovery animation",
+  "emote": { "isLoop": "false", "returnTick": 0, "beginTick": 0, "endTick": 8, "stopTick": 10, "degrees": false,
+    "moves": [
+      { "tick": 0, "easing": "EASEINOUTQUAD", "torso": { "pitch": 1.1, "y": -4.0 }, "leftArm": { "pitch": -0.7 }, "rightArm": { "pitch": -0.7 } },
+      { "tick": 6, "easing": "EASEOUTQUAD", "torso": { "pitch": 0.35, "y": -1.0 } },
+      { "tick": 10, "easing": "EASEINOUTQUAD", "torso": { "pitch": 0.0, "y": 0.0 }, "leftArm": { "pitch": 0.0 }, "rightArm": { "pitch": 0.0 } }
+    ]
+  }
+}

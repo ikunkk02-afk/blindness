@@ -1,0 +1,7 @@
+{
+  "vertex": "veil:blit_screen",
+  "fragment": "blindness:blindness",
+  "definitions": [
+    { "BLINDNESS_DEPTH_ONLY": 1 }
+  ]
+}
