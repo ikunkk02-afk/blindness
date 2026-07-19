@@ -26,7 +26,7 @@ public final class ClientBlindnessState {
 
     public static void startFall(int durationTicks, int seed) {
         fallStartNanos = System.nanoTime();
-        fallDurationNanos = Math.clamp(durationTicks, 1, 60) * 50_000_000L;
+        fallDurationNanos = Math.clamp(durationTicks, 1, 100) * 50_000_000L;
         controlsUnlockNanos = fallStartNanos + fallDurationNanos;
         fallSeed = seed;
     }

@@ -30,7 +30,7 @@ public final class BlindnessClientNetworking {
         ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.FallStart.ID, (payload, context) -> context.client().execute(() -> {
             if (context.client().player != null && payload.entityId() == context.client().player.getId()
                     && (payload.direction() == 0 || payload.direction() == 1)
-                    && payload.durationTicks() >= 1 && payload.durationTicks() <= 60) {
+                    && payload.durationTicks() >= 1 && payload.durationTicks() <= 100) {
                 ClientBlindnessState.startFall(payload.durationTicks(), payload.seed());
             }
         }));
