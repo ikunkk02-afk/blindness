@@ -35,11 +35,25 @@ public class BlindnessServerConfigModel {
     @SectionHeader("entity_sound")
     public boolean entitySoundRevealEnabled = true;
 
+    @RangeConstraint(min = 0, max = 2)
+    public int maximumListeningChunkRadius = 2;
+
+    @RangeConstraint(min = 0, max = 4)
+    public int maximumEntitySoundBlockRevealRadius = 4;
+
+    @RangeConstraint(min = 12, max = 80)
+    public int maximumEntitySoundRevealBlocks = 80;
+
+    @RangeConstraint(min = 4, max = 24)
+    public int entitySoundMaximumNormalEventsPerSecond = 12;
+
+    @RangeConstraint(min = 2, max = 12)
+    public int entitySoundMaximumDangerEventsPerSecond = 6;
+
+    @Deprecated
+    @ExcludeFromScreen
     @RangeConstraint(min = 4.0, max = 16.0, decimalPlaces = 1)
     public double entitySoundRevealMaximumDistance = 12.0;
-
-    @RangeConstraint(min = 1, max = 12)
-    public int entitySoundMaximumEventsPerSecond = 8;
 
     @SectionHeader("hostile_awareness")
     public boolean hostileAwarenessEnabled = true;

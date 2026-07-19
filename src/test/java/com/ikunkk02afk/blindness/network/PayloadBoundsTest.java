@@ -5,7 +5,8 @@ import net.minecraft.util.math.Direction;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import com.ikunkk02afk.blindness.awareness.RevealSource;
+import com.ikunkk02afk.blindness.awareness.EntitySoundCategory;
+import com.ikunkk02afk.blindness.awareness.SoundOcclusion;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,16 +40,29 @@ class PayloadBoundsTest {
         assertTrue(entry.isValid());
         assertEquals(center.down().east(), entry.resolve(center));
         assertThrows(IllegalArgumentException.class, () -> BlindnessPayloads.SoundRevealEntry.relativeTo(
-                center, center.add(3, 0, 0), 1));
+                center, center.add(5, 0, 0), 1));
     }
 
     @Test void entitySoundPayloadCapsEntries() {
         var entries = new ArrayList<BlindnessPayloads.SoundRevealEntry>();
-        for (int i = 0; i < 20; i++) entries.add(new BlindnessPayloads.SoundRevealEntry((byte) 0, (byte) -1, (byte) 0, (byte) 1));
-        var payload = new BlindnessPayloads.EntitySoundReveal(BlockPos.ORIGIN,
-                (byte) RevealSource.ENTITY_AMBIENT.ordinal(), entries);
-        assertEquals(12, payload.entries().size());
-        assertEquals(RevealSource.ENTITY_AMBIENT, RevealSource.fromNetwork(payload.source()));
-        assertNull(RevealSource.fromNetwork(99));
+        for (int i = 0; i < 100; i++) entries.add(new BlindnessPayloads.SoundRevealEntry((byte) 0, (byte) -1, (byte) 0, (byte) 1));
+        var payload = new BlindnessPayloads.EntitySoundEcho(
+                new BlindnessPayloads.SoundEchoPosition(1.25, 64.5, -3.75),
+                new BlindnessPayloads.SoundEchoMetadata((byte) EntitySoundCategory.AMBIENT.ordinal(),
+                        0.72F, false, (byte) SoundOcclusion.CLEAR.ordinal(), 42L),
+                BlockPos.ORIGIN, entries);
+        assertEquals(80, payload.entries().size());
+        assertTrue(payload.position().isValid());
+        assertTrue(payload.metadata().isValid());
+    }
+
+    @Test void echoMetadataContainsNoEntityTrackingFields() {
+        var names = java.util.Arrays.stream(BlindnessPayloads.EntitySoundEcho.class.getRecordComponents())
+                .map(java.lang.reflect.RecordComponent::getName).toList();
+        assertEquals(java.util.List.of("position", "metadata", "blockCenter", "entries"), names);
+        String joined = String.join(" ", names).toLowerCase();
+        assertFalse(joined.contains("entity"));
+        assertFalse(joined.contains("uuid"));
+        assertFalse(joined.contains("type"));
     }
 }

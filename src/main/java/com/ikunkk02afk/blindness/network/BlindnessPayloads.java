@@ -2,7 +2,6 @@ package com.ikunkk02afk.blindness.network;
 
 import com.ikunkk02afk.blindness.BlindnessMod;
 import com.ikunkk02afk.blindness.contact.ContactRevealMath;
-import com.ikunkk02afk.blindness.awareness.EntitySoundRevealService;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -98,8 +97,7 @@ public final class BlindnessPayloads {
             int dx = pos.getX() - center.getX();
             int dy = pos.getY() - center.getY();
             int dz = pos.getZ() - center.getZ();
-            if (Math.abs(dx) > 2 || Math.abs(dy) > 2 || Math.abs(dz) > 2
-                    || Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 2) {
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 2 || Math.abs(dz) > 4) {
                 throw new IllegalArgumentException("Entity sound reveal is outside the local packet range");
             }
             return new SoundRevealEntry((byte) dx, (byte) dy, (byte) dz, (byte) (faces & FACE_MASK));
@@ -108,23 +106,43 @@ public final class BlindnessPayloads {
         public BlockPos resolve(BlockPos center) { return center.add(dx, dy, dz); }
         public int faces() { return Byte.toUnsignedInt(visibleFaces) & FACE_MASK; }
         public boolean isValid() {
-            return Math.abs((int) dx) <= 2 && Math.abs((int) dy) <= 2 && Math.abs((int) dz) <= 2
-                    && Math.abs((int) dx) + Math.abs((int) dy) + Math.abs((int) dz) <= 2 && faces() != 0;
+            return Math.abs((int) dx) <= 4 && Math.abs((int) dy) <= 2 && Math.abs((int) dz) <= 4
+                    && dx * dx + dz * dz <= 16 && faces() != 0;
         }
     }
 
-    public record EntitySoundReveal(BlockPos center, byte source, List<SoundRevealEntry> entries) implements CustomPayload {
-        public static final Id<EntitySoundReveal> ID = new Id<>(BlindnessMod.id("entity_sound_reveal"));
-        private static final PacketCodec<RegistryByteBuf, List<SoundRevealEntry>> ENTRIES_CODEC = PacketCodecs.collection(
-                size -> new ArrayList<>(Math.min(size, EntitySoundRevealService.MAX_SOUND_REVEALS)),
-                SoundRevealEntry.CODEC, EntitySoundRevealService.MAX_SOUND_REVEALS);
-        public static final PacketCodec<RegistryByteBuf, EntitySoundReveal> CODEC = PacketCodec.tuple(
-                BlockPos.PACKET_CODEC, EntitySoundReveal::center, PacketCodecs.BYTE, EntitySoundReveal::source,
-                ENTRIES_CODEC, EntitySoundReveal::entries, EntitySoundReveal::new);
+    public record SoundEchoPosition(double x, double y, double z) {
+        public static final PacketCodec<RegistryByteBuf, SoundEchoPosition> CODEC = PacketCodec.tuple(
+                PacketCodecs.DOUBLE, SoundEchoPosition::x, PacketCodecs.DOUBLE, SoundEchoPosition::y,
+                PacketCodecs.DOUBLE, SoundEchoPosition::z, SoundEchoPosition::new);
+        public boolean isValid() { return Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z); }
+    }
 
-        public EntitySoundReveal {
-            entries = List.copyOf(entries.size() > EntitySoundRevealService.MAX_SOUND_REVEALS
-                    ? entries.subList(0, EntitySoundRevealService.MAX_SOUND_REVEALS) : entries);
+    public record SoundEchoMetadata(byte category, float strength, boolean hostile, byte occlusion, long serverGameTime) {
+        public static final PacketCodec<RegistryByteBuf, SoundEchoMetadata> CODEC = PacketCodec.tuple(
+                PacketCodecs.BYTE, SoundEchoMetadata::category, PacketCodecs.FLOAT, SoundEchoMetadata::strength,
+                PacketCodecs.BOOL, SoundEchoMetadata::hostile, PacketCodecs.BYTE, SoundEchoMetadata::occlusion,
+                PacketCodecs.VAR_LONG, SoundEchoMetadata::serverGameTime, SoundEchoMetadata::new);
+        public boolean isValid() {
+            return category >= 0 && category < com.ikunkk02afk.blindness.awareness.EntitySoundCategory.values().length
+                    && Float.isFinite(strength) && strength >= 0F && strength <= 1F
+                    && occlusion >= 0 && occlusion < com.ikunkk02afk.blindness.awareness.SoundOcclusion.values().length;
+        }
+    }
+
+    public record EntitySoundEcho(SoundEchoPosition position, SoundEchoMetadata metadata, BlockPos blockCenter,
+                                  List<SoundRevealEntry> entries) implements CustomPayload {
+        public static final int MAX_ENTRIES = 80;
+        public static final Id<EntitySoundEcho> ID = new Id<>(BlindnessMod.id("entity_sound_echo"));
+        private static final PacketCodec<RegistryByteBuf, List<SoundRevealEntry>> ENTRIES_CODEC = PacketCodecs.collection(
+                size -> new ArrayList<>(Math.min(size, MAX_ENTRIES)), SoundRevealEntry.CODEC, MAX_ENTRIES);
+        public static final PacketCodec<RegistryByteBuf, EntitySoundEcho> CODEC = PacketCodec.tuple(
+                SoundEchoPosition.CODEC, EntitySoundEcho::position, SoundEchoMetadata.CODEC, EntitySoundEcho::metadata,
+                BlockPos.PACKET_CODEC, EntitySoundEcho::blockCenter, ENTRIES_CODEC, EntitySoundEcho::entries,
+                EntitySoundEcho::new);
+
+        public EntitySoundEcho {
+            entries = List.copyOf(entries.size() > MAX_ENTRIES ? entries.subList(0, MAX_ENTRIES) : entries);
         }
         @Override public Id<? extends CustomPayload> getId() { return ID; }
     }
@@ -163,6 +181,24 @@ public final class BlindnessPayloads {
         public static final Id<ConfigRequest> ID = new Id<>(BlindnessMod.id("config_request"));
         public static final ConfigRequest INSTANCE = new ConfigRequest();
         public static final PacketCodec<RegistryByteBuf, ConfigRequest> CODEC = PacketCodec.unit(INSTANCE);
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    public record UpdateSoundAwarenessSettings(int listeningChunkRadius, int blockRevealRadius) implements CustomPayload {
+        public static final Id<UpdateSoundAwarenessSettings> ID = new Id<>(BlindnessMod.id("update_sound_awareness_settings"));
+        public static final PacketCodec<RegistryByteBuf, UpdateSoundAwarenessSettings> CODEC = PacketCodec.tuple(
+                PacketCodecs.VAR_INT, UpdateSoundAwarenessSettings::listeningChunkRadius,
+                PacketCodecs.VAR_INT, UpdateSoundAwarenessSettings::blockRevealRadius,
+                UpdateSoundAwarenessSettings::new);
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    public record SoundAwarenessSettings(int listeningChunkRadius, int blockRevealRadius) implements CustomPayload {
+        public static final Id<SoundAwarenessSettings> ID = new Id<>(BlindnessMod.id("sound_awareness_settings"));
+        public static final PacketCodec<RegistryByteBuf, SoundAwarenessSettings> CODEC = PacketCodec.tuple(
+                PacketCodecs.VAR_INT, SoundAwarenessSettings::listeningChunkRadius,
+                PacketCodecs.VAR_INT, SoundAwarenessSettings::blockRevealRadius,
+                SoundAwarenessSettings::new);
         @Override public Id<? extends CustomPayload> getId() { return ID; }
     }
 

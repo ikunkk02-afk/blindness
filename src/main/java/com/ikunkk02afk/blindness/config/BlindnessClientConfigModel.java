@@ -58,10 +58,23 @@ public class BlindnessClientConfigModel {
     public boolean cliffCameraFeedback = true;
     public boolean hostileWarningText = true;
     public boolean blurEntitySubtitles = true;
+    @SectionHeader("sound_awareness")
+    public boolean entitySoundEchoEnabled = true;
+    @RangeConstraint(min = 0, max = 2) public int listeningChunkRadius = 1;
+    @RangeConstraint(min = 0, max = 4) public int entitySoundBlockRevealRadius = 2;
+    public boolean showOffscreenSoundEchoes = true;
+    @RangeConstraint(min = 0.6, max = 1.8, decimalPlaces = 2) public double soundEchoSize = 1.0;
+    @RangeConstraint(min = 0.25, max = 1.0, decimalPlaces = 2) public double soundEchoBrightness = 0.75;
+    @RangeConstraint(min = 0.05, max = 0.30, decimalPlaces = 2) public double soundEchoFadeInTime = 0.10;
+    @RangeConstraint(min = 0.4, max = 2.5, decimalPlaces = 2) public double soundEchoHoldTime = 1.20;
+    @RangeConstraint(min = 0.4, max = 2.5, decimalPlaces = 2) public double soundEchoFadeOutTime = 1.30;
+    @RangeConstraint(min = 0.0, max = 1.0, decimalPlaces = 2) public double occludedSoundEchoBlurStrength = 0.65;
+    @RangeConstraint(min = 4, max = 48) public int maximumActiveSoundEchoes = 24;
     @RangeConstraint(min = 0.0, max = 1.0, decimalPlaces = 2) public double entitySoundOutlineBrightness = 0.60;
-    @RangeConstraint(min = 0.5, max = 3.0, decimalPlaces = 1) public double entityFootstepHoldTime = 1.2;
-    @RangeConstraint(min = 0.5, max = 4.0, decimalPlaces = 1) public double entityAmbientHoldTime = 1.8;
-    @RangeConstraint(min = 0.5, max = 4.0, decimalPlaces = 1) public double entityDangerHoldTime = 2.0;
+    @RangeConstraint(min = 0.05, max = 0.30, decimalPlaces = 2) public double entitySoundOutlineFadeInTime = 0.10;
+    @RangeConstraint(min = 0.5, max = 4.0, decimalPlaces = 2) public double entitySoundOutlineHoldTime = 2.50;
+    @RangeConstraint(min = 0.3, max = 1.5, decimalPlaces = 2) public double entitySoundOutlineFadeOutTime = 0.80;
+    public boolean debugSoundEchoes = false;
 
     @SectionHeader("compatibility_restart_required")
     public boolean blockInformationMods = true;

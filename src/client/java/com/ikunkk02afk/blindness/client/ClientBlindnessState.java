@@ -1,6 +1,8 @@
 package com.ikunkk02afk.blindness.client;
 
 import com.ikunkk02afk.blindness.client.contact.ContactRevealManager;
+import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerManager;
+import com.ikunkk02afk.blindness.component.BlindnessComponents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.World;
@@ -14,6 +16,7 @@ public final class ClientBlindnessState {
     private static int fallSeed;
     private static RegistryKey<World> lastWorld;
     private static boolean wasDead;
+    private static boolean wasBlindnessEnabled;
     private static ServerConfigSnapshot serverConfig = new ServerConfigSnapshot(10, 20, 50, 8);
     private static int cliffPulsesRemaining;
     private static long nextCliffPulseNanos;
@@ -43,7 +46,15 @@ public final class ClientBlindnessState {
         }
         boolean dead = client.player.isDead();
         if (dead && !wasDead) ContactRevealManager.clear();
+        if (dead && !wasDead) SoundEchoMarkerManager.clear();
         wasDead = dead;
+        boolean blindnessEnabled = BlindnessComponents.PLAYER.maybeGet(client.player)
+                .map(component -> component.blindnessEnabled()).orElse(false);
+        if (wasBlindnessEnabled && !blindnessEnabled) {
+            ContactRevealManager.clear();
+            SoundEchoMarkerManager.clear();
+        }
+        wasBlindnessEnabled = blindnessEnabled;
         long now = System.nanoTime();
         if (cliffPulsesRemaining > 0 && now >= nextCliffPulseNanos) {
             client.player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(),
@@ -77,10 +88,12 @@ public final class ClientBlindnessState {
         clearTransient();
         lastWorld = null;
         wasDead = false;
+        wasBlindnessEnabled = false;
     }
 
     private static void clearTransient() {
         ContactRevealManager.clear();
+        SoundEchoMarkerManager.clear();
         controlsUnlockNanos = 0;
         fallStartNanos = 0;
         fallDurationNanos = 0;

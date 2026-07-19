@@ -66,4 +66,13 @@ class ResourceContractTest {
         assertTrue(clientMixins.contains("SubtitlesHudMixin"));
         assertFalse(commonMixins.contains("ConnectScreenMixin"));
     }
+
+    @Test void soundAwarenessSettingsPersistInPlayerCcaAndEchoHasDedicatedRenderer() throws Exception {
+        String component = Files.readString(ROOT.resolve(
+                "src/main/java/com/ikunkk02afk/blindness/component/PlayerBlindnessComponent.java"));
+        assertTrue(component.contains("ListeningChunkRadius"));
+        assertTrue(component.contains("EntitySoundBlockRevealRadius"));
+        assertTrue(Files.exists(ROOT.resolve(
+                "src/client/java/com/ikunkk02afk/blindness/client/sound/SoundEchoMarkerRenderer.java")));
+    }
 }

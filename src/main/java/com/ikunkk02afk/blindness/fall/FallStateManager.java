@@ -40,6 +40,7 @@ public final class FallStateManager {
     private static final RegistryKey<DamageType> TRIP_DAMAGE = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, BlindnessMod.id("trip"));
     private static final int FALL_TICKS = 18;
     private static final int GET_UP_TICKS = 10;
+    private static final int CONTROL_LOCK_TICKS = 5 * 20;
 
     private FallStateManager() {}
 
@@ -67,6 +68,10 @@ public final class FallStateManager {
         return BlindnessRuntime.get(player).isFalling(player.getServerWorld().getTime());
     }
 
+    static int controlLockTicks() {
+        return CONTROL_LOCK_TICKS;
+    }
+
     private static boolean locked(net.minecraft.entity.player.PlayerEntity player) {
         return player instanceof ServerPlayerEntity serverPlayer && isControlLocked(serverPlayer);
     }
@@ -78,7 +83,7 @@ public final class FallStateManager {
 
         if (runtime.controlsUnlockAt > 0) {
             player.setSprinting(false);
-            player.setVelocity(player.getVelocity().multiply(0.15, 1.0, 0.15));
+            player.setVelocity(0.0, player.getVelocity().y, 0.0);
             if (!runtime.getUpSent && now >= runtime.fallEndsAt) {
                 runtime.getUpSent = true;
                 BlindnessNetworking.sendToTrackingAndSelf(player,
@@ -177,14 +182,15 @@ public final class FallStateManager {
 
     private static void beginFall(ServerPlayerEntity player, PlayerRuntimeState runtime, Hazard hazard, long now) {
         runtime.fallEndsAt = now + FALL_TICKS;
-        runtime.controlsUnlockAt = now + FALL_TICKS + GET_UP_TICKS;
+        runtime.controlsUnlockAt = now + CONTROL_LOCK_TICKS;
         runtime.tinnitusUntil = hazard.baseRisk >= 0.5 ? now + 12 : 0;
         runtime.getUpSent = false;
         player.setSprinting(false);
-        player.setVelocity(player.getVelocity().multiply(0.15, 1.0, 0.15));
+        player.setVelocity(0.0, player.getVelocity().y, 0.0);
         BlindnessComponents.PLAYER.get(player).incrementFalls();
         BlindnessNetworking.sendToTrackingAndSelf(player,
-                new BlindnessPayloads.FallStart(player.getId(), hazard.direction, FALL_TICKS + GET_UP_TICKS, player.getRandom().nextInt()));
+                new BlindnessPayloads.FallStart(player.getId(), hazard.direction,
+                        CONTROL_LOCK_TICKS, player.getRandom().nextInt()));
         BlindnessNetworking.sendToTrackingAndSelf(player,
                 new BlindnessPayloads.Animation(player.getId(), hazard.direction == 0 ? (byte) 0 : (byte) 1, FALL_TICKS));
         player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_HURT,

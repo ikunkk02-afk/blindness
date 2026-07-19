@@ -28,7 +28,8 @@ public final class PlayerRuntimeState {
     public int lastCliffRisk;
     public long lastHostileWarningAt;
     public int soundRateWindow;
-    public int soundEventsInWindow;
+    public int normalSoundEventsInWindow;
+    public int dangerSoundEventsInWindow;
     public final Set<UUID> nearbyThreats = new HashSet<>();
     public final Set<UUID> targetingThreats = new HashSet<>();
     public RegistryKey<World> worldKey;
@@ -52,7 +53,8 @@ public final class PlayerRuntimeState {
         lastCliffRisk = 0;
         lastHostileWarningAt = 0;
         soundRateWindow = 0;
-        soundEventsInWindow = 0;
+        normalSoundEventsInWindow = 0;
+        dangerSoundEventsInWindow = 0;
         nearbyThreats.clear();
         targetingThreats.clear();
         caneSweepStarted = false;

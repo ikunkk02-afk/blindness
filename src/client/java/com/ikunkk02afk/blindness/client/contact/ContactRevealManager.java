@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class ContactRevealManager {
-    public static final int MAX_ACTIVE_REVEALS = 48;
+    public static final int MAX_ACTIVE_REVEALS = 128;
     private static final Map<BlockPos, RevealedBlock> REVEALS = new LinkedHashMap<>();
 
     private ContactRevealManager() {}
@@ -48,25 +48,24 @@ public final class ContactRevealManager {
         }
     }
 
-    public static void acceptSound(BlockPos center, RevealSource source, List<BlindnessPayloads.SoundRevealEntry> entries) {
+    public static void acceptSound(BlockPos center, RevealSource source, float soundStrength,
+                                   List<BlindnessPayloads.SoundRevealEntry> entries) {
         if (source == null || source == RevealSource.CANE_CENTER || source == RevealSource.CANE_ADJACENT
-                || entries.isEmpty() || entries.size() > 12) return;
+                || !Float.isFinite(soundStrength) || soundStrength < 0F || soundStrength > 1F
+                || entries.isEmpty() || entries.size() > BlindnessPayloads.EntitySoundEcho.MAX_ENTRIES) return;
         long now = System.nanoTime();
-        long fadeIn = secondsToNanos(0.08);
-        long hold = secondsToNanos(switch (source) {
-            case ENTITY_FOOTSTEP -> BlindnessClient.CONFIG.entityFootstepHoldTime();
-            case ENTITY_AMBIENT -> BlindnessClient.CONFIG.entityAmbientHoldTime();
-            case ENTITY_DANGER -> BlindnessClient.CONFIG.entityDangerHoldTime();
-            default -> 0.0;
-        });
-        long fade = secondsToNanos(source == RevealSource.ENTITY_FOOTSTEP ? 0.6 : 0.8);
+        long fadeIn = secondsToNanos(BlindnessClient.CONFIG.entitySoundOutlineFadeInTime());
+        long hold = secondsToNanos(BlindnessClient.CONFIG.entitySoundOutlineHoldTime()
+                * (source == RevealSource.ENTITY_FOOTSTEP ? 0.72 : 1.0));
+        long fade = secondsToNanos(BlindnessClient.CONFIG.entitySoundOutlineFadeOutTime());
         float base = switch (source) {
             case ENTITY_FOOTSTEP -> 0.52F;
             case ENTITY_AMBIENT -> 0.62F;
             case ENTITY_DANGER -> 0.70F;
             default -> 0F;
         };
-        float intensity = Math.min(0.70F, base * (float) BlindnessClient.CONFIG.entitySoundOutlineBrightness() / 0.60F);
+        float intensity = Math.min(0.75F, base * (0.65F + soundStrength * 0.35F)
+                * (float) BlindnessClient.CONFIG.entitySoundOutlineBrightness() / 0.60F);
         for (BlindnessPayloads.SoundRevealEntry entry : entries) {
             if (!entry.isValid()) return;
             BlockPos pos = entry.resolve(center).toImmutable();

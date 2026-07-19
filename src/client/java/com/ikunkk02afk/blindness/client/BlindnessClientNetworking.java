@@ -2,15 +2,28 @@ package com.ikunkk02afk.blindness.client;
 
 import com.ikunkk02afk.blindness.client.animation.BlindnessAnimations;
 import com.ikunkk02afk.blindness.client.contact.ContactRevealManager;
+import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerManager;
 import com.ikunkk02afk.blindness.network.BlindnessPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.text.Text;
 import net.minecraft.sound.SoundEvents;
 import com.ikunkk02afk.blindness.awareness.CliffRisk;
+import com.ikunkk02afk.blindness.awareness.EntitySoundCategory;
 import com.ikunkk02afk.blindness.awareness.RevealSource;
+import com.ikunkk02afk.blindness.awareness.SoundOcclusion;
+import com.ikunkk02afk.blindness.BlindnessMod;
+import com.ikunkk02afk.blindness.awareness.SoundAwarenessRules;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Vec3d;
 
 public final class BlindnessClientNetworking {
+    private static int actualListeningRadius = -1;
+    private static int actualBlockRadius = -1;
+    private static int requestedListeningRadius = -1;
+    private static int requestedBlockRadius = -1;
+
     private BlindnessClientNetworking() {}
 
     public static void register() {
@@ -56,15 +69,36 @@ public final class BlindnessClientNetworking {
             }
             ClientBlindnessState.startCliffWarning(risk.isSevere());
         }));
-        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.EntitySoundReveal.ID, (payload, context) -> context.client().execute(() -> {
-            if (context.client().player == null || payload.entries().isEmpty() || payload.entries().size() > 12
-                    || payload.center().getSquaredDistance(context.client().player.getPos()) > 196.0) return;
-            RevealSource source = RevealSource.fromNetwork(payload.source());
-            if (source == null || source == RevealSource.CANE_CENTER || source == RevealSource.CANE_ADJACENT) return;
+        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.EntitySoundEcho.ID, (payload, context) -> context.client().execute(() -> {
+            if (context.client().player == null || context.client().world == null
+                    || !payload.position().isValid() || !payload.metadata().isValid()
+                    || payload.entries().size() > BlindnessPayloads.EntitySoundEcho.MAX_ENTRIES) return;
             for (BlindnessPayloads.SoundRevealEntry entry : payload.entries()) {
-                if (!entry.isValid() || entry.resolve(payload.center()).getSquaredDistance(context.client().player.getPos()) > 225.0) return;
+                if (!entry.isValid()) return;
             }
-            ContactRevealManager.acceptSound(payload.center(), source, payload.entries());
+            EntitySoundCategory category = EntitySoundCategory.values()[payload.metadata().category()];
+            SoundOcclusion occlusion = SoundOcclusion.values()[payload.metadata().occlusion()];
+            Vec3d position = new Vec3d(payload.position().x(), payload.position().y(), payload.position().z());
+            BlockPos echoBlock = BlockPos.ofFloored(position);
+            ChunkPos echoChunk = new ChunkPos(echoBlock);
+            ChunkPos playerChunk = context.client().player.getChunkPos();
+            int listeningRadius = actualListeningRadius >= 0 ? actualListeningRadius
+                    : Math.clamp(BlindnessClient.CONFIG.listeningChunkRadius(), 0, 2);
+            long packetAge = context.client().world.getTime() - payload.metadata().serverGameTime();
+            if (!context.client().world.isInBuildLimit(echoBlock)
+                    || !context.client().world.getChunkManager().isChunkLoaded(echoChunk.x, echoChunk.z)
+                    || !SoundAwarenessRules.isChunkInRange(playerChunk.x, playerChunk.z,
+                    echoChunk.x, echoChunk.z, listeningRadius)
+                    || packetAge < -20L || packetAge > 100L) return;
+            SoundEchoMarkerManager.accept(position, category, payload.metadata().strength(),
+                    payload.metadata().hostile(), occlusion, payload.metadata().serverGameTime());
+            RevealSource source = payload.metadata().hostile() ? RevealSource.ENTITY_DANGER : category.revealSource();
+            ContactRevealManager.acceptSound(payload.blockCenter(), source, payload.metadata().strength(), payload.entries());
+            if (BlindnessClient.CONFIG.debugSoundEchoes()) {
+                BlindnessMod.LOGGER.info("Sound echo accepted sourceEntityType=server-filtered category={} "
+                                + "echoWorldPosition={} environmentOrigin={} sourceChunk={} playerChunk={}",
+                        category, position, payload.blockCenter(), echoChunk, playerChunk);
+            }
         }));
         ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.HostileWarning.ID, (payload, context) -> context.client().execute(() -> {
             if (context.client().player == null || Byte.toUnsignedInt(payload.volumePercent()) > 100) return;
@@ -95,6 +129,32 @@ public final class BlindnessClientNetworking {
                         Math.clamp(payload.tapCooldown(), 5, 40), Math.clamp(payload.sweepCooldown(), 10, 80),
                         Math.clamp(payload.pathTtl(), 20, 80),
                         Math.clamp(payload.maxEntries(), 1, BlindnessPayloads.ContactReveal.MAX_ENTRIES)))));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientBlindnessState.clear());
+        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.SoundAwarenessSettings.ID,
+                (payload, context) -> context.client().execute(() -> {
+                    actualListeningRadius = Math.clamp(payload.listeningChunkRadius(), 0, 2);
+                    actualBlockRadius = Math.clamp(payload.blockRevealRadius(), 0, 4);
+                    requestedListeningRadius = actualListeningRadius;
+                    requestedBlockRadius = actualBlockRadius;
+                    BlindnessClient.CONFIG.listeningChunkRadius(actualListeningRadius);
+                    BlindnessClient.CONFIG.entitySoundBlockRevealRadius(actualBlockRadius);
+                }));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            actualListeningRadius = actualBlockRadius = -1;
+            requestedListeningRadius = requestedBlockRadius = -1;
+            SoundEchoMarkerManager.clear();
+            ClientBlindnessState.clear();
+        });
+    }
+
+    public static void tickSettingsSync() {
+        if (actualListeningRadius < 0 || actualBlockRadius < 0) return;
+        int listening = Math.clamp(BlindnessClient.CONFIG.listeningChunkRadius(), 0, 2);
+        int blocks = Math.clamp(BlindnessClient.CONFIG.entitySoundBlockRevealRadius(), 0, 4);
+        if ((listening != actualListeningRadius || blocks != actualBlockRadius)
+                && (listening != requestedListeningRadius || blocks != requestedBlockRadius)) {
+            requestedListeningRadius = listening;
+            requestedBlockRadius = blocks;
+            ClientPlayNetworking.send(new BlindnessPayloads.UpdateSoundAwarenessSettings(listening, blocks));
+        }
     }
 }

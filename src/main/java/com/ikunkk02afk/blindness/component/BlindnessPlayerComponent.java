@@ -9,6 +9,8 @@ public interface BlindnessPlayerComponent extends AutoSyncedComponent {
     int totalFalls();
     int totalSuccessfulScans();
     boolean tutorialCompleted();
+    int listeningChunkRadius();
+    int entitySoundBlockRevealRadius();
 
     void setBlindnessEnabled(boolean value);
     void setVisualMode(String value);
@@ -16,5 +18,6 @@ public interface BlindnessPlayerComponent extends AutoSyncedComponent {
     void incrementFalls();
     void incrementSuccessfulScans();
     void setTutorialCompleted(boolean value);
+    void setSoundAwarenessSettings(int listeningChunkRadius, int blockRevealRadius);
     void reset();
 }
