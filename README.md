@@ -1,74 +1,88 @@
 # 失明症（Blindness）
 
-适用于 Minecraft 1.21.1 的 Fabric 模组。纯黑视觉、声音反馈、导盲杖接触感知和服务器判定的绊倒机制，共同构成依赖听觉、短时轮廓与记忆移动的游戏体验。
+适用于 Minecraft 1.21.1 的 Fabric 模组。世界保持纯黑，玩家依靠导盲杖接触、短暂的真实方块模型轮廓、声音和模糊安全提示行动。
 
 > 本模组以游戏化方式模拟部分重度视力障碍者可能使用的环境感知方式，不代表所有盲人或视障人士的真实体验。
 
-当前版本：`0.1.0`　许可证：MIT　Java：21
+当前版本：`0.1.0`；Java：21；许可证：MIT。
 
 ## 前置依赖
 
-- Fabric Loader 0.19.3 或更高版本
 - Fabric API 0.116.14+1.21.1
 - Veil 4.3.0
-- Cardinal Components API 6.1.3（base、entity）
+- Cardinal Components API 6.1.3
 - owo-lib 0.12.15.4+1.21
 - Player Animator 2.0.4+1.21.1
-- Mod Menu 11.0.4（客户端可选，用于模组列表中的配置按钮）
+- Mod Menu 11.0.4
 
-客户端安装模组本体及 Fabric API、Veil、CCA、owo-lib、Player Animator；推荐安装 Mod Menu。专用服务端只需要模组本体、Fabric API、CCA 与 owo-lib，不需要 Mod Menu、Veil 或 Player Animator。使用 Java 21 启动。
+专用服务器只加载通用玩法代码，不加载 Screen、MinecraftClient、Veil 渲染或字幕 Mixin。
 
-## 导盲杖
+## 导盲杖与高级轮廓
 
-导盲杖可以按配方有序合成：顶部为铁锭和白色羊毛，中间与底部各一根木棍。
+- 短按在服务端执行一次最多 4 格的真实接触射线；长按在一秒内进行四次有限方向接触，不会生成扇形或大范围声波扫描。
+- 命中方块后只显示中心方块、直接正交相邻方块和必要的双格结构配对方块。
+- 普通方块使用当前 `BlockState` 的真实 `BakedModel`、纹理 Alpha 裁剪和世界深度遮挡；方块实体安全回退到真实 `VoxelShape`。
+- 中心轮廓保持约 5 秒并高于相邻轮廓；第一人称和第三人称共用同一深度正确的 Veil 遮罩。
+- 世界和暂停菜单后方仍然保持纯黑，旧版球形声波、扩散圆环与大范围地形扫描没有恢复。
 
-- 短按右键：服务端从玩家视线向前检测最多 5 格。必须实际碰到方块，才会短暂显示该方块及最多六个正交相邻方块。
-- 未命中：播放挥空声音和敲击动画，不显示任何环境轮廓。
-- 长按右键：播放左右摆杖动画，在一秒内执行最多四次有限方向接触；每次仍只能命中一个实际方块，不会照亮扇形区域。疾跑会取消，摆杖期间移动速度降低。
-- 中心方块立即以更亮、更粗的轮廓出现；相邻方块延迟约 0.1 秒且强度较低。轮廓淡入约 0.1 秒、完整保持 5 秒，再用约 0.8 秒平滑淡出。
-- 最近确认的中心和直接相邻位置会在约 2.5 秒内降低绊倒风险，但不会完全免疫摔倒。
+## 悬崖警告
 
-所有命中、距离、遮挡、数量和路径认知都由服务端确认。单次接触最多发送 8 个位置，不接受客户端提交任意方块坐标，也不会向无关玩家广播环境结果。
+悬崖检查只在导盲杖短按接触或长按摆动的每次实际接触时运行，空手站立不会获得地形雷达。服务端沿水平朝向在 4 格内每 0.5 格采样，并读取实际碰撞形状的可行走顶面；眼部和脚部碰撞射线会在实体墙前截断路径。
 
-## 视觉
+- 平地、楼梯、半砖和单次下降 1 格通常安全。
+- 突然下降 2–3 格：双重提示音和“前方有明显落差”。
+- 突然下降 4 格及以上、岩浆、火焰、虚空或没有安全落脚面：三连提示音和严重警告。
+- 同一边缘与朝向默认 2 秒冷却；严重风险可以越过刚发生的普通风险提示。
+- 不发送深度、坐标或安全路径，不显示悬崖底部，也不会移动或转向玩家。
 
-世界背景始终为纯黑，普通方块纹理和颜色不可见。Veil 后处理只合成服务器授权的接触轮廓、可选的声音提示以及 GUI/HUD：
+## 生物声音环境感知
 
-- 普通方块轮廓来自当前 `BlockState` 的实际 `BakedModel`：模型像素先写入独立遮罩，原纹理颜色不会进入最终画面；纹理 Alpha 仍用于裁剪，因此短草、花、藤蔓和火把保留真实可见像素形状。
-- 模型遮罩复制当前帧的世界深度并使用 `LEQUAL` 测试；随后由屏幕空间边缘提取和横/纵两阶段膨胀生成默认 4 像素中心线、3 像素相邻线及 10/8 像素光晕。被墙完全遮挡的方块和墙后矿物不会显示。
-- 方块实体渲染器使用的顶点格式和材质不统一。箱子、末影箱、告示牌、床、横幅、潜影盒、钟、讲台书、头颅和装饰罐等方块实体目前安全降级为实际 `VoxelShape`；流体使用实际流体表面形状。普通植物、火把、栅栏、墙、玻璃板、门、楼梯、半砖、铁轨和梯子不走该降级路径。
-- 暂停菜单和其他 GUI 后方默认保持黑色，GUI 本身正常显示。
-- 第一人称导盲杖默认保持可见。
-- 所有接触轮廓淡出后，画面重新只剩纯黑世界与 GUI/HUD。
+服务端在 `Entity#playSound` 的真实生物声音调用上分类脚步、环境叫声、受伤、攻击、死亡、飞行、游泳与溅水。它不会每 Tick 遍历全部生物，也不会让每只生物定时发射雷达。
 
-旧版球形声波、扩散圆环、半径世界扫描和扇形批量扫描已经删除。shader 不再使用 `ScanOrigin`、`ScanRadius`、`ScanProgress` 或传播速度。
+- 脚步最多显示脚下及正交相邻的 7 个外露方块。
+- 环境叫声最多显示 10 个外露方块。
+- 受伤、攻击或死亡声音最多显示 12 个外露方块。
+- 只向默认 12 格听觉范围内、启用失明症的玩家发送；每名玩家默认每秒最多 8 个普通声音事件。
+- 每个方块必须在已加载区块内并通过玩家视线首碰撞面检查，因此墙后矿石不会被揭示。
+- 声音轮廓使用已有真实模型渲染，亮度和持续时间弱于导盲杖；缓存按方块去重，导盲杖优先，满载时先淘汰旧的低优先级声音轮廓。
+- 不绘制生物模型、名称、血量、数量、坐标、精确距离、HUD 箭头或雷达点。
 
-## 配置
+## 模糊敌对危险提示与字幕
 
-默认按 `B` 打开 owo-lib 生成的“失明症设置”。安装 Mod Menu 后也可以通过：
+服务端每 10 Tick 对每名玩家附近默认 12 格 AABB 做一次空间查询，最多处理 32 个 `MobEntity`。标准 `HostileEntity`、继承该基类的模组生物，以及已经把玩家设为目标的生物才算危险；普通动物、村民和宠物不触发。
 
-```text
-主菜单 → 模组 → 失明症 → 配置
-```
+新威胁进入范围或开始以玩家为目标时会合并为一次“附近似乎有危险”，默认冷却 5 秒；近距离或开始攻击可以使用缩短后的冷却。反馈只包含模糊文本和随距离改变音量的低沉声音，不包含名称、数量、坐标、距离或方向箭头。
 
-两个入口打开同一个 `config/blindness-client.json5`，使用同一个 owo 配置实例。可切换详细模型轮廓，并分别调整中心/相邻轮廓粗细、亮度、光晕半径和强度，以及淡入、5 秒保持、淡出、相邻出现延迟、镜头晃动、手持导盲杖显示和菜单后方黑屏。
+启用失明症时，原版敌对生物字幕会改为“附近有危险的声音”，普通生物字幕会改为“附近有生物的声音”；敌对字幕方向加入 25–45 度误差。`/blindness disable` 后恢复原版字幕。
 
-旧配置中的 `outlineDuration`、`waveSpeed`、`tapRange`、`sweepRange`、`scannedPathTtlTicks` 和 `maxScanHits` 暂时保留以兼容现有 JSON5 文件，但已从配置界面隐藏且不再参与效果。新服务端路径认知使用 `contactPathTtlTicks`。
+## 地图和世界信息模组限制
 
-## 指令
+默认严格检查使用 Fabric Loader 的真实 Mod ID，不读取 JAR 文件名，也不按名称是否包含 `map` 猜测。主菜单仍能正常显示；进入已有单人世界、创建世界或通过服务器列表、直接连接、快速连接、重连发起多人连接之前会打开冲突页面。Fabric 客户端加入事件还提供第二层保险并立即断开绕过路径。
 
-- `/blindness enable`：开启当前玩家的失明症体验。
-- `/blindness disable`：关闭体验、恢复正常视觉并立即清空接触轮廓。
-- `/blindness status`：显示状态、视觉模式、导盲杖熟练度和累计摔倒次数。
-- `/blindness reset`：重置玩家持久数据和临时状态，仅创造模式玩家或权限等级 2 的管理员可用。
+默认地图类 ID：
 
-玩家开启状态、视觉模式、熟练度、累计摔倒、成功接触次数和教程状态由 CCA 保存。接触轮廓、平衡、摔倒动画状态和路径缓存不会写入玩家存档，并会在断线、切换维度、死亡或禁用功能时清空。
+`xaerominimap`、`xaeroworldmap`、`journeymap`、`voxelmap`、`ftbchunks`、`antiqueatlas`、`antique_atlas`、`antique_atlas_4`、`map_atlases`、`mapatlases`
 
-## 摔倒系统
+默认信息 HUD ID：
 
-服务器检测移动方向附近的碰撞形状、地面高度和局部实体。升降高度、正面撞墙、冰面急转和实体尺寸会增加风险，蹲下慢走、近期接触确认区域和平衡状态会降低风险。
+`jade`、`wthit`、`hwyla`、`waila`、`theoneprobe`
 
-摔倒时会停止疾跑、削减水平速度、播放 Player Animator 动画并暂时阻止攻击、挖掘、跳跃和使用物品。第一人称倾斜与晃动有硬上限，可在设置中降低或关闭。普通绊倒伤害有上限；火焰、岩浆、仙人掌和高处跌落继续使用原版伤害。
+冲突页面显示名称、Mod ID、版本和类别，提供返回标题、打开 mods 文件夹和复制结果；没有“仍然进入世界”按钮，不崩溃、不删除文件，也不修改其他模组配置。
+
+JEI、REI、EMI 及配方/用途查询不受限制。硬允许 ID 为 `jei`、`roughlyenoughitems`、`roughlyenoughitems-api`、`emi`。
+
+兼容检查可在 owo-lib 设置中配置总开关、类别开关、追加 ID 和忽略 ID；修改后需要重启。关闭总开关会在设置名称中明确提示体验会被削弱。默认列表仍由代码维护，配方查看器的硬允许规则优先。
+
+没有在 `fabric.mod.json` 使用 `breaks`，因为那会让 Loader 在主菜单出现前阻止整个游戏启动，无法提供可读冲突页面。该本机客户端检查用于模组包与体验完整性，不是安全级反作弊；客户端报告理论上可以被修改或伪造。
+
+## 配置与命令
+
+按 `B` 或通过 Mod Menu 打开同一个 owo-lib 客户端配置界面。服务端配置位于 `config/blindness-server.json5`，负责悬崖阈值、声音距离/速率、敌对检测范围与冷却；客户端配置负责音量、文本、旁白、轻微镜头反馈、轮廓亮度、字幕模糊和本机兼容检查。
+
+- `/blindness enable`：开启体验。
+- `/blindness disable`：恢复正常视觉、字幕并清空临时轮廓。
+- `/blindness status`：查看当前状态。
+- `/blindness reset`：重置持久与临时状态。
 
 ## 构建与验证
 
@@ -83,6 +97,4 @@
 
 ## English summary
 
-Blindness is a Fabric 1.21.1 mod with a fully black world and server-authoritative guidance-cane contact sensing. A real cane hit reveals only the struck block and its direct orthogonal neighbors for five seconds. Ordinary blocks use alpha-clipped baked-model masks, world-depth occlusion, and screen-space dilation instead of cube selection boxes. Holding the cane performs up to four limited contacts instead of a wide scan. Both the in-game key and optional Mod Menu integration open the same owo-lib configuration screen.
-
-This is a game-oriented simulation and does not represent every blind or visually impaired person's lived experience.
+Blindness is a Fabric 1.21.1 mod built around a fully black world, server-authoritative four-block guidance-cane contact, depth-correct baked-model outlines, event-driven local block reveals from real creature sounds, vague hostile awareness, privacy-preserving entity subtitles, and pre-entry restrictions for map/world-information mods. Recipe viewers such as JEI, REI, and EMI remain allowed. The local compatibility check protects the intended experience; it is not security-grade anti-cheat.

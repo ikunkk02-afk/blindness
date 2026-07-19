@@ -52,6 +52,18 @@ class ResourceContractTest {
 
     @Test void readmeContainsRequiredDisclaimer() throws Exception {
         String readme = Files.readString(ROOT.resolve("README.md"));
-        assertTrue(readme.contains("本模组以游戏化方式模拟部分重度视力障碍者可能使用的环境感知方式，不代表所有盲人或视障人士的真实体验。"));
+        assertTrue(readme.contains("不代表所有盲人或视障人士的真实体验"));
+        assertTrue(readme.contains("不是安全级反作弊"));
+        assertTrue(readme.contains("JEI、REI、EMI"));
+    }
+
+    @Test void compatibilityMixinsStayClientOnlyAndNoBreaksAreDeclared() throws Exception {
+        String metadata = Files.readString(ROOT.resolve("src/main/resources/fabric.mod.json"));
+        String clientMixins = Files.readString(ROOT.resolve("src/client/resources/blindness.client.mixins.json"));
+        String commonMixins = Files.readString(ROOT.resolve("src/main/resources/blindness.mixins.json"));
+        assertFalse(metadata.contains("\"breaks\""));
+        assertTrue(clientMixins.contains("ConnectScreenMixin"));
+        assertTrue(clientMixins.contains("SubtitlesHudMixin"));
+        assertFalse(commonMixins.contains("ConnectScreenMixin"));
     }
 }

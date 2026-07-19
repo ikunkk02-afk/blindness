@@ -5,6 +5,9 @@ import io.wispforest.owo.config.annotation.ExcludeFromScreen;
 import io.wispforest.owo.config.annotation.RangeConstraint;
 import io.wispforest.owo.config.annotation.SectionHeader;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Config(name = "blindness-client", wrapperName = "BlindnessClientConfig")
 public class BlindnessClientConfigModel {
     @SectionHeader("visual")
@@ -44,11 +47,27 @@ public class BlindnessClientConfigModel {
     @RangeConstraint(min = 0.5, max = 3.0, decimalPlaces = 2) public double outlineDuration = 1.5;
     @Deprecated @ExcludeFromScreen
     @RangeConstraint(min = 2.0, max = 20.0, decimalPlaces = 1) public double waveSpeed = 10.0;
-    public boolean showCreatureBlurredOutline = false;
-
     @SectionHeader("accessibility")
     @RangeConstraint(min = 0.0, max = 1.0, decimalPlaces = 2) public double cameraShakeStrength = 0.45;
     public boolean disableFirstPersonFallTilt = false;
     public boolean showTutorial = true;
     @RangeConstraint(min = 0.0, max = 1.0, decimalPlaces = 2) public double soundPromptVolume = 0.8;
+
+    public boolean cliffWarningText = true;
+    public boolean cliffWarningNarration = true;
+    public boolean cliffCameraFeedback = true;
+    public boolean hostileWarningText = true;
+    public boolean blurEntitySubtitles = true;
+    @RangeConstraint(min = 0.0, max = 1.0, decimalPlaces = 2) public double entitySoundOutlineBrightness = 0.60;
+    @RangeConstraint(min = 0.5, max = 3.0, decimalPlaces = 1) public double entityFootstepHoldTime = 1.2;
+    @RangeConstraint(min = 0.5, max = 4.0, decimalPlaces = 1) public double entityAmbientHoldTime = 1.8;
+    @RangeConstraint(min = 0.5, max = 4.0, decimalPlaces = 1) public double entityDangerHoldTime = 2.0;
+
+    @SectionHeader("compatibility_restart_required")
+    public boolean blockInformationMods = true;
+    public boolean blockMapMods = true;
+    public boolean blockWorldInfoHudMods = true;
+    public boolean blockXrayMods = true;
+    public List<String> additionalBlockedModIds = new ArrayList<>();
+    public List<String> ignoredBlockedModIds = new ArrayList<>();
 }

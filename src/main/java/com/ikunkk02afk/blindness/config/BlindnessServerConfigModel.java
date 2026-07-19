@@ -20,6 +20,39 @@ public class BlindnessServerConfigModel {
     @RangeConstraint(min = 32, max = 512)
     public int maxPathNodes = 192;
 
+    @SectionHeader("cliff")
+    public boolean cliffWarningsEnabled = true;
+
+    @RangeConstraint(min = 2, max = 3)
+    public int cliffDropThreshold = 2;
+
+    @RangeConstraint(min = 4, max = 8)
+    public int severeCliffDropThreshold = 4;
+
+    @RangeConstraint(min = 1.0, max = 5.0, decimalPlaces = 1)
+    public double cliffWarningCooldownSeconds = 2.0;
+
+    @SectionHeader("entity_sound")
+    public boolean entitySoundRevealEnabled = true;
+
+    @RangeConstraint(min = 4.0, max = 16.0, decimalPlaces = 1)
+    public double entitySoundRevealMaximumDistance = 12.0;
+
+    @RangeConstraint(min = 1, max = 12)
+    public int entitySoundMaximumEventsPerSecond = 8;
+
+    @SectionHeader("hostile_awareness")
+    public boolean hostileAwarenessEnabled = true;
+
+    @RangeConstraint(min = 8.0, max = 14.0, decimalPlaces = 1)
+    public double hostileAwarenessRange = 12.0;
+
+    @RangeConstraint(min = 2.0, max = 10.0, decimalPlaces = 1)
+    public double hostileWarningCooldownSeconds = 5.0;
+
+    @RangeConstraint(min = 25.0, max = 45.0, decimalPlaces = 1)
+    public double hostileDirectionErrorDegrees = 35.0;
+
     @Deprecated
     @ExcludeFromScreen
     @RangeConstraint(min = 2, max = 6)

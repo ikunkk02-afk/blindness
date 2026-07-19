@@ -2,6 +2,7 @@ package com.ikunkk02afk.blindness.client.contact;
 
 import com.ikunkk02afk.blindness.client.BlindnessClient;
 import com.ikunkk02afk.blindness.network.BlindnessPayloads;
+import com.ikunkk02afk.blindness.awareness.RevealSource;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
@@ -28,19 +29,65 @@ public final class ContactRevealManager {
             BlockPos pos = entry.resolve(center).toImmutable();
             RevealedBlock existing = REVEALS.get(pos);
             if (existing == null) {
-                REVEALS.put(pos, new RevealedBlock(pos, entry.isCenter(), entry.visibleFaces(), now,
+                RevealSource source = entry.isCenter() ? RevealSource.CANE_CENTER : RevealSource.CANE_ADJACENT;
+                REVEALS.put(pos, new RevealedBlock(pos, source, entry.visibleFaces(), now,
                         delay, fadeIn, hold, fade, entry.isCenter() ? 1F : 0.75F));
             } else {
-                existing.refresh(entry.isCenter(), entry.visibleFaces(), now, delay, fadeIn, hold, fade,
+                existing.refresh(entry.isCenter() ? RevealSource.CANE_CENTER : RevealSource.CANE_ADJACENT,
+                        entry.visibleFaces(), now, delay, fadeIn, hold, fade,
                         entry.isCenter() ? 1F : 0.75F);
             }
         }
         while (REVEALS.size() > MAX_ACTIVE_REVEALS) {
             BlockPos earliest = REVEALS.entrySet().stream()
-                    .min(Comparator.comparingLong(entry -> entry.getValue().endNanos()))
+                    .min(Comparator.<Map.Entry<BlockPos, RevealedBlock>>comparingInt(entry -> entry.getValue().priority())
+                            .thenComparingLong(entry -> entry.getValue().endNanos()))
                     .map(Map.Entry::getKey).orElse(null);
             if (earliest == null) break;
             REVEALS.remove(earliest);
+        }
+    }
+
+    public static void acceptSound(BlockPos center, RevealSource source, List<BlindnessPayloads.SoundRevealEntry> entries) {
+        if (source == null || source == RevealSource.CANE_CENTER || source == RevealSource.CANE_ADJACENT
+                || entries.isEmpty() || entries.size() > 12) return;
+        long now = System.nanoTime();
+        long fadeIn = secondsToNanos(0.08);
+        long hold = secondsToNanos(switch (source) {
+            case ENTITY_FOOTSTEP -> BlindnessClient.CONFIG.entityFootstepHoldTime();
+            case ENTITY_AMBIENT -> BlindnessClient.CONFIG.entityAmbientHoldTime();
+            case ENTITY_DANGER -> BlindnessClient.CONFIG.entityDangerHoldTime();
+            default -> 0.0;
+        });
+        long fade = secondsToNanos(source == RevealSource.ENTITY_FOOTSTEP ? 0.6 : 0.8);
+        float base = switch (source) {
+            case ENTITY_FOOTSTEP -> 0.52F;
+            case ENTITY_AMBIENT -> 0.62F;
+            case ENTITY_DANGER -> 0.70F;
+            default -> 0F;
+        };
+        float intensity = Math.min(0.70F, base * (float) BlindnessClient.CONFIG.entitySoundOutlineBrightness() / 0.60F);
+        for (BlindnessPayloads.SoundRevealEntry entry : entries) {
+            if (!entry.isValid()) return;
+            BlockPos pos = entry.resolve(center).toImmutable();
+            RevealedBlock existing = REVEALS.get(pos);
+            if (existing == null) {
+                REVEALS.put(pos, new RevealedBlock(pos, source, entry.faces(), now, 0, fadeIn, hold, fade, intensity));
+            } else {
+                existing.refresh(source, entry.faces(), now, 0, fadeIn, hold, fade, intensity);
+            }
+        }
+        trimToLimit();
+    }
+
+    private static void trimToLimit() {
+        while (REVEALS.size() > MAX_ACTIVE_REVEALS) {
+            BlockPos victim = REVEALS.entrySet().stream()
+                    .min(Comparator.<Map.Entry<BlockPos, RevealedBlock>>comparingInt(entry -> entry.getValue().priority())
+                            .thenComparingLong(entry -> entry.getValue().endNanos()))
+                    .map(Map.Entry::getKey).orElse(null);
+            if (victim == null) break;
+            REVEALS.remove(victim);
         }
     }
 

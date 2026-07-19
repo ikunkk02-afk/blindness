@@ -21,7 +21,15 @@ public abstract class CameraMixin {
     @Inject(method = "update", at = @At("TAIL"))
     private void blindness$applyBoundedFallCamera(BlockView area, Entity focusedEntity, boolean thirdPerson,
                                                    boolean inverseView, float tickDelta, CallbackInfo ci) {
-        if (thirdPerson || !ClientBlindnessState.controlsLocked() || MinecraftClient.getInstance().player == null) return;
+        if (thirdPerson || MinecraftClient.getInstance().player == null) return;
+        float cliff = ClientBlindnessState.cliffFeedback();
+        if (!ClientBlindnessState.controlsLocked()) {
+            if (cliff > 0F) {
+                float wobble = (float) Math.sin(System.nanoTime() / 35_000_000.0) * 0.75F * cliff;
+                setRotation(getYaw() + wobble, Math.clamp(getPitch() + Math.abs(wobble) * 0.35F, -89.5F, 89.5F));
+            }
+            return;
+        }
         float progress = ClientBlindnessState.fallProgress();
         float strength = (float) BlindnessClient.CONFIG.cameraShakeStrength();
         float tilt = BlindnessClient.CONFIG.disableFirstPersonFallTilt() ? 0F : Math.min(38F, 38F * progress);

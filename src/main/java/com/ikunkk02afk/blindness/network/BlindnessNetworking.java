@@ -17,6 +17,9 @@ public final class BlindnessNetworking {
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.FallEnd.ID, BlindnessPayloads.FallEnd.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ContactReveal.ID, BlindnessPayloads.ContactReveal.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ClearContactReveals.ID, BlindnessPayloads.ClearContactReveals.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.CliffWarning.ID, BlindnessPayloads.CliffWarning.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.EntitySoundReveal.ID, BlindnessPayloads.EntitySoundReveal.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.HostileWarning.ID, BlindnessPayloads.HostileWarning.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.Animation.ID, BlindnessPayloads.Animation.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.TutorialPrompt.ID, BlindnessPayloads.TutorialPrompt.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ServerConfig.ID, BlindnessPayloads.ServerConfig.CODEC);

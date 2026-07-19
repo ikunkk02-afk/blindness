@@ -1,9 +1,6 @@
 #version 150
 
-#include veil:space_helper
-
 uniform sampler2D DiffuseSampler0;
-uniform sampler2D SceneDepthSampler;
 uniform float CenterOutlineThickness;
 uniform float AdjacentOutlineThickness;
 uniform float CenterGlowRadius;
@@ -12,8 +9,6 @@ uniform float CenterOutlineBrightness;
 uniform float AdjacentOutlineBrightness;
 uniform float CenterGlowStrength;
 uniform float AdjacentGlowStrength;
-uniform vec3 CreatureOrigin;
-uniform float CreatureStrength;
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -43,13 +38,5 @@ void main() {
     float contact = clamp(max(core, glow), 0.0, 1.0);
     vec3 outputColor = vec3(0.72, 0.96, 1.0) * contact;
 
-    if (CreatureStrength > 0.0) {
-        float depth = texture(SceneDepthSampler, texCoord).r;
-        if (depth < 0.99999) {
-            vec3 viewPos = screenToLocalSpace(texCoord, depth).xyz;
-            float cue = (1.0 - smoothstep(0.4, 1.1, length(viewPos - CreatureOrigin))) * CreatureStrength * 0.35;
-            outputColor = max(outputColor, vec3(0.75, 0.88, 0.94) * cue);
-        }
-    }
     fragColor = vec4(outputColor, 1.0);
 }

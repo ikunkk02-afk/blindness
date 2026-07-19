@@ -2,6 +2,7 @@ package com.ikunkk02afk.blindness.network;
 
 import com.ikunkk02afk.blindness.BlindnessMod;
 import com.ikunkk02afk.blindness.contact.ContactRevealMath;
+import com.ikunkk02afk.blindness.awareness.EntitySoundRevealService;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -76,6 +77,63 @@ public final class BlindnessPayloads {
         public static final Id<ClearContactReveals> ID = new Id<>(BlindnessMod.id("clear_contact_reveals"));
         public static final ClearContactReveals INSTANCE = new ClearContactReveals();
         public static final PacketCodec<RegistryByteBuf, ClearContactReveals> CODEC = PacketCodec.unit(INSTANCE);
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    public record CliffWarning(byte risk) implements CustomPayload {
+        public static final Id<CliffWarning> ID = new Id<>(BlindnessMod.id("cliff_warning"));
+        public static final PacketCodec<RegistryByteBuf, CliffWarning> CODEC = PacketCodec.tuple(
+                PacketCodecs.BYTE, CliffWarning::risk, CliffWarning::new);
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    public record SoundRevealEntry(byte dx, byte dy, byte dz, byte visibleFaces) {
+        private static final int FACE_MASK = 0x3F;
+        public static final PacketCodec<RegistryByteBuf, SoundRevealEntry> CODEC = PacketCodec.tuple(
+                PacketCodecs.BYTE, SoundRevealEntry::dx, PacketCodecs.BYTE, SoundRevealEntry::dy,
+                PacketCodecs.BYTE, SoundRevealEntry::dz, PacketCodecs.BYTE, SoundRevealEntry::visibleFaces,
+                SoundRevealEntry::new);
+
+        public static SoundRevealEntry relativeTo(BlockPos center, BlockPos pos, int faces) {
+            int dx = pos.getX() - center.getX();
+            int dy = pos.getY() - center.getY();
+            int dz = pos.getZ() - center.getZ();
+            if (Math.abs(dx) > 2 || Math.abs(dy) > 2 || Math.abs(dz) > 2
+                    || Math.abs(dx) + Math.abs(dy) + Math.abs(dz) > 2) {
+                throw new IllegalArgumentException("Entity sound reveal is outside the local packet range");
+            }
+            return new SoundRevealEntry((byte) dx, (byte) dy, (byte) dz, (byte) (faces & FACE_MASK));
+        }
+
+        public BlockPos resolve(BlockPos center) { return center.add(dx, dy, dz); }
+        public int faces() { return Byte.toUnsignedInt(visibleFaces) & FACE_MASK; }
+        public boolean isValid() {
+            return Math.abs((int) dx) <= 2 && Math.abs((int) dy) <= 2 && Math.abs((int) dz) <= 2
+                    && Math.abs((int) dx) + Math.abs((int) dy) + Math.abs((int) dz) <= 2 && faces() != 0;
+        }
+    }
+
+    public record EntitySoundReveal(BlockPos center, byte source, List<SoundRevealEntry> entries) implements CustomPayload {
+        public static final Id<EntitySoundReveal> ID = new Id<>(BlindnessMod.id("entity_sound_reveal"));
+        private static final PacketCodec<RegistryByteBuf, List<SoundRevealEntry>> ENTRIES_CODEC = PacketCodecs.collection(
+                size -> new ArrayList<>(Math.min(size, EntitySoundRevealService.MAX_SOUND_REVEALS)),
+                SoundRevealEntry.CODEC, EntitySoundRevealService.MAX_SOUND_REVEALS);
+        public static final PacketCodec<RegistryByteBuf, EntitySoundReveal> CODEC = PacketCodec.tuple(
+                BlockPos.PACKET_CODEC, EntitySoundReveal::center, PacketCodecs.BYTE, EntitySoundReveal::source,
+                ENTRIES_CODEC, EntitySoundReveal::entries, EntitySoundReveal::new);
+
+        public EntitySoundReveal {
+            entries = List.copyOf(entries.size() > EntitySoundRevealService.MAX_SOUND_REVEALS
+                    ? entries.subList(0, EntitySoundRevealService.MAX_SOUND_REVEALS) : entries);
+        }
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    public record HostileWarning(byte volumePercent, boolean critical) implements CustomPayload {
+        public static final Id<HostileWarning> ID = new Id<>(BlindnessMod.id("hostile_warning"));
+        public static final PacketCodec<RegistryByteBuf, HostileWarning> CODEC = PacketCodec.tuple(
+                PacketCodecs.BYTE, HostileWarning::volumePercent, PacketCodecs.BOOL, HostileWarning::critical,
+                HostileWarning::new);
         @Override public Id<? extends CustomPayload> getId() { return ID; }
     }
 

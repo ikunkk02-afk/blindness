@@ -66,15 +66,6 @@ public final class BlindnessPostProcessor {
         pipeline.getUniformSafe("AdjacentGlowRadius").setFloat((float) BlindnessClient.CONFIG.adjacentGlowRadius());
         pipeline.getUniformSafe("CenterGlowStrength").setFloat((float) BlindnessClient.CONFIG.centerGlowStrength());
         pipeline.getUniformSafe("AdjacentGlowStrength").setFloat((float) BlindnessClient.CONFIG.adjacentGlowStrength());
-        ClientBlindnessState.CreaturePulse pulse = ClientBlindnessState.activeCreaturePulse();
-        if (pulse == null) {
-            pipeline.getUniformSafe("CreatureStrength").setFloat(0F);
-        } else {
-            var camera = client.gameRenderer.getCamera().getPos();
-            pipeline.getUniformSafe("CreatureOrigin").setVector(
-                    (float) (pulse.x() - camera.x), (float) (pulse.y() - camera.y), (float) (pulse.z() - camera.z));
-            pipeline.getUniformSafe("CreatureStrength").setFloat(pulse.strength());
-        }
     }
 
     public static void cleanup() {

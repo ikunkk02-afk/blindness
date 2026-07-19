@@ -7,6 +7,7 @@ import com.ikunkk02afk.blindness.item.ModItems;
 import com.ikunkk02afk.blindness.network.BlindnessPayloads;
 import com.ikunkk02afk.blindness.runtime.BlindnessRuntime;
 import com.ikunkk02afk.blindness.runtime.PlayerRuntimeState;
+import com.ikunkk02afk.blindness.awareness.CliffDetectionService;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -36,7 +37,7 @@ import java.util.List;
 import java.util.Set;
 
 public final class CaneContactService {
-    private static final double MAX_CONTACT_DISTANCE = 5.0;
+    private static final double MAX_CONTACT_DISTANCE = 4.0;
     private static final double MAX_REVEAL_DISTANCE_SQUARED = 7.0 * 7.0;
 
     private CaneContactService() {}
@@ -53,6 +54,7 @@ public final class CaneContactService {
         if ((!player.getMainHandStack().isOf(ModItems.GUIDANCE_CANE)
                 && !player.getOffHandStack().isOf(ModItems.GUIDANCE_CANE))
                 || player.getItemCooldownManager().isCoolingDown(ModItems.GUIDANCE_CANE)) return false;
+        CliffDetectionService.detectAndWarn(player, yawOffset);
         Vec3d start = player.getEyePos();
         Vec3d direction = Vec3d.fromPolar(player.getPitch(), player.getYaw() + yawOffset);
         BlockHitResult hit = raycast(player, start, start.add(direction.multiply(MAX_CONTACT_DISTANCE)));
