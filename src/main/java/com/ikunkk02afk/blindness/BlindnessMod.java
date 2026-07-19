@@ -5,7 +5,7 @@ import com.ikunkk02afk.blindness.config.BlindnessServerConfig;
 import com.ikunkk02afk.blindness.fall.FallStateManager;
 import com.ikunkk02afk.blindness.item.ModItems;
 import com.ikunkk02afk.blindness.network.BlindnessNetworking;
-import com.ikunkk02afk.blindness.scan.CaneScanService;
+import com.ikunkk02afk.blindness.contact.CaneContactService;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public final class BlindnessMod implements ModInitializer {
         ModItems.register();
         BlindnessNetworking.registerServer();
         BlindnessCommands.register();
-        CaneScanService.register();
+        CaneContactService.register();
         FallStateManager.register();
         LOGGER.info("Blindness 0.1.0 initialized");
     }

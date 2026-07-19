@@ -2,11 +2,13 @@ package com.ikunkk02afk.blindness.command;
 
 import com.ikunkk02afk.blindness.component.BlindnessComponents;
 import com.ikunkk02afk.blindness.runtime.BlindnessRuntime;
+import com.ikunkk02afk.blindness.network.BlindnessPayloads;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.text.Text;
 
 import static net.minecraft.server.command.CommandManager.literal;
@@ -31,7 +33,10 @@ public final class BlindnessCommands {
     private static int setEnabled(ServerCommandSource source, boolean enabled) throws CommandSyntaxException {
         ServerPlayerEntity player = source.getPlayerOrThrow();
         BlindnessComponents.PLAYER.get(player).setBlindnessEnabled(enabled);
-        if (!enabled) BlindnessRuntime.get(player).resetTransient(player.getWorld().getRegistryKey());
+        if (!enabled) {
+            BlindnessRuntime.get(player).resetTransient(player.getWorld().getRegistryKey());
+            ServerPlayNetworking.send(player, BlindnessPayloads.ClearContactReveals.INSTANCE);
+        }
         source.sendFeedback(() -> Text.translatable(enabled
                 ? "commands.blindness.enable.success" : "commands.blindness.disable.success"), false);
         return 1;
@@ -49,6 +54,7 @@ public final class BlindnessCommands {
         ServerPlayerEntity player = source.getPlayerOrThrow();
         BlindnessComponents.PLAYER.get(player).reset();
         BlindnessRuntime.get(player).resetTransient(player.getWorld().getRegistryKey());
+        ServerPlayNetworking.send(player, BlindnessPayloads.ClearContactReveals.INSTANCE);
         source.sendFeedback(() -> Text.translatable("commands.blindness.reset.success"), false);
         return 1;
     }

@@ -28,12 +28,25 @@ class ResourceContractTest {
         assertTrue(item.getColorModel().hasAlpha());
     }
 
-    @Test void veilPipelineUsesDepthAndNormalWithDepthFallback() throws Exception {
-        String shader = Files.readString(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/shaders/program/blindness.fsh"));
+    @Test void veilPipelineUsesDetailedAlphaMaskAndContainsNoWaveUniforms() throws Exception {
+        String mask = Files.readString(ROOT.resolve("src/client/resources/assets/blindness/shaders/core/contact_mask_block.fsh"));
+        String edge = Files.readString(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/shaders/program/contact_edge.fsh"));
+        String horizontal = Files.readString(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/shaders/program/contact_dilate_horizontal.fsh"));
+        String composite = Files.readString(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/shaders/program/contact_composite.fsh"));
         String full = Files.readString(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/post/blindness.json"));
-        assertTrue(shader.contains("DiffuseDepthSampler"));
-        assertTrue(shader.contains("VeilDynamicNormal"));
+        assertTrue(mask.contains("textureAlpha < 0.1"));
+        assertTrue(edge.contains("ContactMaskSampler"));
+        assertTrue(edge.contains("DiffuseDepthSampler"));
+        assertTrue(edge.contains("VeilDynamicNormal"));
+        assertTrue(horizontal.contains("CenterGlowRadius"));
+        assertTrue(composite.contains("vec3 outputColor"));
+        assertTrue(full.contains("contact_edges"));
+        assertTrue(full.contains("contact_horizontal"));
+        assertFalse(edge.contains("ScanOrigin"));
+        assertFalse(composite.contains("ScanRadius"));
+        assertFalse(composite.contains("ScanProgress"));
         assertTrue(full.contains("\"normal\""));
+        assertTrue(Files.exists(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/framebuffers/contact_mask.json")));
         assertTrue(Files.exists(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/post/blindness_depth.json")));
     }
 

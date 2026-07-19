@@ -1,6 +1,6 @@
 {
   "vertex": "veil:blit_screen",
-  "fragment": "blindness:blindness",
+  "fragment": "blindness:contact_edge",
   "definitions": [
     { "BLINDNESS_DEPTH_ONLY": 1 }
   ]

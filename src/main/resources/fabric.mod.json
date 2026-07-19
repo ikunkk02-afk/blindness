@@ -15,6 +15,7 @@
   "entrypoints": {
     "main": ["com.ikunkk02afk.blindness.BlindnessMod"],
     "client": ["com.ikunkk02afk.blindness.client.BlindnessClient"],
+    "modmenu": ["com.ikunkk02afk.blindness.client.BlindnessModMenuIntegration"],
     "cardinal-components-entity": ["com.ikunkk02afk.blindness.component.BlindnessComponents"]
   },
   "mixins": [
@@ -35,6 +36,7 @@
   },
   "recommends": {
     "veil": ">=4.3.0",
-    "playeranimator": ">=2.0.4+1.21.1"
+    "playeranimator": ">=2.0.4+1.21.1",
+    "modmenu": ">=11.0.4"
   }
 }

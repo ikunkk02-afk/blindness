@@ -2,11 +2,31 @@
   "renderStage": "after_level",
   "dynamicBuffers": ["normal"],
   "priority": 2000,
+  "textures": {
+    "ContactMaskSampler": { "type": "framebuffer", "name": "blindness:contact_mask" },
+    "SceneDepthSampler": { "type": "framebuffer", "name": "minecraft:main:depth" }
+  },
+  "framebuffers": {
+    "contact_edges": { "depth": false, "format": "RGBA8" },
+    "contact_horizontal": { "depth": false, "format": "RGBA8" }
+  },
   "stages": [
     {
       "type": "veil:blit",
-      "shader": "blindness:blindness",
-      "in": "minecraft:main"
+      "shader": "blindness:contact_edge",
+      "in": "minecraft:main",
+      "out": "contact_edges"
+    },
+    {
+      "type": "veil:blit",
+      "shader": "blindness:contact_dilate_horizontal",
+      "in": "contact_edges",
+      "out": "contact_horizontal"
+    },
+    {
+      "type": "veil:blit",
+      "shader": "blindness:contact_composite",
+      "in": "contact_horizontal"
     }
   ]
 }

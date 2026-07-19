@@ -15,8 +15,8 @@ public final class BlindnessNetworking {
     public static void registerServer() {
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.FallStart.ID, BlindnessPayloads.FallStart.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.FallEnd.ID, BlindnessPayloads.FallEnd.CODEC);
-        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ScanResult.ID, BlindnessPayloads.ScanResult.CODEC);
-        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ScanWave.ID, BlindnessPayloads.ScanWave.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ContactReveal.ID, BlindnessPayloads.ContactReveal.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ClearContactReveals.ID, BlindnessPayloads.ClearContactReveals.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.Animation.ID, BlindnessPayloads.Animation.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.TutorialPrompt.ID, BlindnessPayloads.TutorialPrompt.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ServerConfig.ID, BlindnessPayloads.ServerConfig.CODEC);
@@ -41,8 +41,8 @@ public final class BlindnessNetworking {
     public static void sendServerConfig(ServerPlayerEntity player) {
         BlindnessServerConfig config = BlindnessMod.serverConfig();
         ServerPlayNetworking.send(player, new BlindnessPayloads.ServerConfig(
-                config.tapRange(), config.sweepRange(), config.tapCooldownTicks(), config.sweepCooldownTicks(),
-                config.scannedPathTtlTicks(), Math.min(BlindnessPayloads.ScanResult.MAX_HITS, config.maxScanHits())));
+                config.tapCooldownTicks(), config.sweepCooldownTicks(), config.contactPathTtlTicks(),
+                BlindnessPayloads.ContactReveal.MAX_ENTRIES));
     }
 
     public static void sendToTrackingAndSelf(ServerPlayerEntity player, net.minecraft.network.packet.CustomPayload payload) {
