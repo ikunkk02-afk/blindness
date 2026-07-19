@@ -154,6 +154,7 @@ Listening radius and block outline range sync to the server and persist in playe
 ## Incompatible Mods
 
 - **DashLoader** is currently unsupported. Its shader caching system can interfere with Veil shader and post-processing initialization, potentially causing blackout failures, broken detection outlines, or client errors.
+- **Iris shader packs**: Iris itself runs fine, but enabling any shader pack will cause block detection HUD outline rendering errors. Iris is currently only supported with shader packs disabled.
 
 ### Restricted Mods
 
@@ -186,7 +187,8 @@ The following are never blocked: JEI, REI, EMI, and other recipe/usage-query mod
 | Multiplayer (client + server) | ✅ Verified |
 | Dedicated server | ✅ Verified (Mod Menu not required) |
 | Sodium | Not fully verified |
-| Iris | Not fully verified |
+| Iris (no shader pack) | ✅ Verified |
+| Iris (shader pack active) | ❌ Outline rendering broken |
 
 ## Known Issues
 
