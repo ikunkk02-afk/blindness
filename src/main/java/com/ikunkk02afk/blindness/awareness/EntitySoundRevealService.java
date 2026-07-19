@@ -31,8 +31,10 @@ import net.minecraft.world.RaycastContext;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 public final class EntitySoundRevealService {
@@ -40,10 +42,12 @@ public final class EntitySoundRevealService {
     private static final int FOOTSTEP_MIN_INTERVAL_TICKS = 5;
     private static final Map<Entity, Long> LAST_FOOTSTEP = new WeakHashMap<>();
     private static final Map<SoundEventKey, Long> RECENT_EVENTS = new HashMap<>();
+    private static final Set<String> REPORTED_UNREGISTERED_SOUNDS = new HashSet<>();
 
     private EntitySoundRevealService() {}
 
     public static void handleSound(ServerWorld world, Entity source, SoundEvent sound, float volume, float pitch) {
+        if (world == null || source == null || sound == null) return;
         if (!BlindnessMod.serverConfig().entitySoundRevealEnabled() || !(source instanceof LivingEntity)
                 || source instanceof PlayerEntity || source.isRemoved() || source.isSilent()
                 || source.getWorld() != world || volume <= 0.02F) return;
@@ -85,8 +89,10 @@ public final class EntitySoundRevealService {
 
     private static boolean isDuplicate(ServerWorld world, Entity source, SoundEvent sound, long tick) {
         Vec3d pos = source.getPos();
+        Identifier soundId = Registries.SOUND_EVENT.getId(sound);
+        Identifier keySoundId = soundId != null ? soundId : Identifier.of("blindness", "unregistered");
         SoundEventKey key = new SoundEventKey(world.getRegistryKey().getValue(), source.getId(),
-                Registries.SOUND_EVENT.getId(sound),
+                keySoundId,
                 (int) Math.floor(pos.x * 4.0), (int) Math.floor(pos.y * 4.0),
                 (int) Math.floor(pos.z * 4.0));
         RECENT_EVENTS.entrySet().removeIf(entry -> Math.abs(tick - entry.getValue()) > 2L);
@@ -218,11 +224,19 @@ public final class EntitySoundRevealService {
     }
 
     static EntitySoundCategory classify(SoundEvent sound) {
+        if (sound == null) return null;
         Identifier id = Registries.SOUND_EVENT.getId(sound);
+        if (id == null) {
+            if (REPORTED_UNREGISTERED_SOUNDS.add(sound.toString())) {
+                BlindnessMod.LOGGER.debug("EntitySoundRevealService: ignoring unregistered SoundEvent: {}", sound);
+            }
+            return null;
+        }
         return classifyPath(id.getPath());
     }
 
     static EntitySoundCategory classifyPath(String path) {
+        if (path == null) return null;
         String[] parts = path.split("\\.");
         if (parts.length < 3 || !parts[0].equals("entity")) return null;
         String action = parts[parts.length - 1];
