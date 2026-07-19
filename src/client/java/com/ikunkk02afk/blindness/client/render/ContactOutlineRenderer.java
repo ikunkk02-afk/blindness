@@ -89,8 +89,14 @@ public final class ContactOutlineRenderer {
 
         // The mask is manual so it can receive a copy of this frame's world depth. Clear only
         // color; clearing depth here would make hidden models visible through walls.
-        mask.clear(GL11C.GL_COLOR_BUFFER_BIT);
-        AdvancedFbo.getMainFramebuffer().resolveToAdvancedFbo(mask, GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
+        try {
+            mask.clear(GL11C.GL_COLOR_BUFFER_BIT);
+            AdvancedFbo.getMainFramebuffer().resolveToAdvancedFbo(mask,
+                    GL11C.GL_DEPTH_BUFFER_BIT, GL11C.GL_NEAREST);
+        } catch (Exception e) {
+            BlindnessMod.LOGGER.debug("Mask FBO operation failed, skipping outline pass: {}", e.toString());
+            return;
+        }
 
         List<RevealedBlock> reveals = ContactRevealManager.snapshot();
         boolean enabled = client.world != null && client.player != null && !reveals.isEmpty()
@@ -236,7 +242,18 @@ public final class ContactOutlineRenderer {
     }
 
     static AdvancedFbo maskFramebuffer() {
-        return VeilRenderSystem.renderer().getFramebufferManager().getFramebuffer(MASK_FRAMEBUFFER);
+        try {
+            AdvancedFbo fbo = VeilRenderSystem.renderer().getFramebufferManager()
+                    .getFramebuffer(MASK_FRAMEBUFFER);
+            if (fbo != null && (fbo.getWidth() <= 0 || fbo.getHeight() <= 0)) return null;
+            return fbo;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    static boolean isMaskFboAvailable() {
+        return maskFramebuffer() != null;
     }
 
     static ShaderProgram blockMaskShader() { return blockMaskShader; }

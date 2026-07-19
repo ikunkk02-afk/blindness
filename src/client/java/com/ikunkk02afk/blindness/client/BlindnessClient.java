@@ -3,6 +3,7 @@ package com.ikunkk02afk.blindness.client;
 import com.ikunkk02afk.blindness.BlindnessMod;
 import com.ikunkk02afk.blindness.client.animation.BlindnessAnimations;
 import com.ikunkk02afk.blindness.client.render.BlindnessPostProcessor;
+import com.ikunkk02afk.blindness.client.render.BlindnessBlackoutRenderer;
 import com.ikunkk02afk.blindness.client.render.ContactOutlineRenderer;
 import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerManager;
 import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerRenderer;
@@ -36,6 +37,7 @@ public final class BlindnessClient implements ClientModInitializer {
         BlindnessClientNetworking.register();
         BlindnessAnimations.register();
         BlindnessPostProcessor.register();
+        BlindnessBlackoutRenderer.register();
         ContactOutlineRenderer.register();
         SoundEchoMarkerRenderer.register();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(
@@ -47,6 +49,8 @@ public final class BlindnessClient implements ClientModInitializer {
                     @Override public void reload(ResourceManager manager) {
                         SoundEchoMarkerManager.clear();
                         SoundEchoMarkerRenderer.clearProjectionState();
+                        ContactOutlineRenderer.clearModelCache();
+                        BlindnessPostProcessor.cleanup();
                     }
                 });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {

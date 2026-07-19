@@ -40,12 +40,15 @@ class ResourceContractTest {
         assertTrue(edge.contains("VeilDynamicNormal"));
         assertTrue(horizontal.contains("CenterGlowRadius"));
         assertTrue(composite.contains("vec3 outputColor"));
-        assertTrue(full.contains("contact_edges"));
-        assertTrue(full.contains("contact_horizontal"));
+        assertTrue(full.contains("\"contact_edges\""));
+        assertTrue(full.contains("\"contact_horizontal\""));
         assertFalse(edge.contains("ScanOrigin"));
         assertFalse(composite.contains("ScanRadius"));
         assertFalse(composite.contains("ScanProgress"));
-        assertTrue(full.contains("\"normal\""));
+        // "normal" dynamic buffer removed — caused GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+        // crashes with Sodium. Pipeline now uses depth-only edge detection.
+        assertFalse(full.contains("\"dynamicBuffers\""));
+        assertFalse(full.contains("\"normal\""));
         assertTrue(Files.exists(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/framebuffers/contact_mask.json")));
         assertTrue(Files.exists(ROOT.resolve("src/client/resources/assets/blindness/pinwheel/post/blindness_depth.json")));
     }
@@ -57,11 +60,13 @@ class ResourceContractTest {
         assertTrue(readme.contains("JEI、REI、EMI"));
     }
 
-    @Test void compatibilityMixinsStayClientOnlyAndNoBreaksAreDeclared() throws Exception {
+    @Test void compatibilityMixinsStayClientOnlyAndDashLoaderIsTheOnlyBreak() throws Exception {
         String metadata = Files.readString(ROOT.resolve("src/main/resources/fabric.mod.json"));
         String clientMixins = Files.readString(ROOT.resolve("src/client/resources/blindness.client.mixins.json"));
         String commonMixins = Files.readString(ROOT.resolve("src/main/resources/blindness.mixins.json"));
-        assertFalse(metadata.contains("\"breaks\""));
+        // DashLoader is the only intentional hard break — its shader cache
+        // interferes with Veil's ShaderProgram initialization and post-processing.
+        assertTrue(metadata.contains("\"dashloader\""));
         assertTrue(clientMixins.contains("ConnectScreenMixin"));
         assertTrue(clientMixins.contains("SubtitlesHudMixin"));
         assertFalse(commonMixins.contains("ConnectScreenMixin"));

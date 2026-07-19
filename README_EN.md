@@ -151,7 +151,11 @@ Key settings:
 
 Listening radius and block outline range sync to the server and persist in player data.
 
-## Incompatible or Restricted Mods
+## Incompatible Mods
+
+- **DashLoader** is currently unsupported. Its shader caching system can interfere with Veil shader and post-processing initialization, potentially causing blackout failures, broken detection outlines, or client errors.
+
+### Restricted Mods
 
 The following mod types are detected before entering a world. A conflict screen appears; the conflicting mods must be removed or disabled to proceed. No files are deleted, the game does not crash, and other mod configs are not touched.
 

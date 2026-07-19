@@ -34,6 +34,9 @@
     "cardinal-components-entity": ">=6.1.3",
     "owo": ">=0.12.15.4+1.21"
   },
+  "breaks": {
+    "dashloader": "*"
+  },
   "recommends": {
     "veil": ">=4.3.0",
     "playeranimator": ">=2.0.4+1.21.1",

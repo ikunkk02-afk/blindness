@@ -1,6 +1,5 @@
 {
   "renderStage": "after_level",
-  "dynamicBuffers": ["normal"],
   "priority": 2000,
   "textures": {
     "ContactMaskSampler": { "type": "framebuffer", "name": "blindness:contact_mask" },
@@ -13,7 +12,7 @@
   "stages": [
     {
       "type": "veil:blit",
-      "shader": "blindness:contact_edge",
+      "shader": "blindness:contact_edge_depth",
       "in": "minecraft:main",
       "out": "contact_edges"
     },
