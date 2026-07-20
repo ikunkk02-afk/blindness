@@ -93,5 +93,48 @@
   "screen.blindness.blocked.category.map": "Map mod",
   "screen.blindness.blocked.category.info_hud": "Information HUD mod",
   "screen.blindness.blocked.category.xray": "World visibility mod",
-  "screen.blindness.blocked.row": "%1$s (%2$s) %3$s — %4$s"
+  "screen.blindness.blocked.row": "%1$s (%2$s) %3$s — %4$s",
+
+  "msg.blindness.starter_cane_granted": "You received a Guidance Cane",
+  "msg.blindness.starter_cane_dropped": "Inventory full — cane dropped at your feet",
+
+  "ore.blindness.coal": "Coal Ore",
+  "ore.blindness.iron": "Iron Ore",
+  "ore.blindness.copper": "Copper Ore",
+  "ore.blindness.gold": "Gold Ore",
+  "ore.blindness.redstone": "Redstone Ore",
+  "ore.blindness.lapis": "Lapis Lazuli Ore",
+  "ore.blindness.diamond": "Diamond Ore",
+  "ore.blindness.emerald": "Emerald Ore",
+  "ore.blindness.quartz": "Nether Quartz Ore",
+  "ore.blindness.ancient_debris": "Ancient Debris",
+
+  "hud.blindness.ore_entry": "Detected: %s ×%s | %s %s blocks",
+
+  "direction.blindness.front": "front",
+  "direction.blindness.front_right": "front-right",
+  "direction.blindness.right": "right",
+  "direction.blindness.back_right": "back-right",
+  "direction.blindness.back": "back",
+  "direction.blindness.back_left": "back-left",
+  "direction.blindness.left": "left",
+  "direction.blindness.front_left": "front-left",
+  "direction.blindness.above": "above",
+  "direction.blindness.below": "below",
+
+  "msg.blindness.ender_eye_shattered": "The Eye of Ender has shattered",
+  "msg.blindness.ender_eye_dropped": "Eye of Ender dropped | %s · about %s blocks",
+
+  "hud.blindness.ender_eye_marker": "Eye of Ender",
+  "hud.blindness.ender_eye_distance": "%s blocks",
+  "hud.blindness.dropped_ender_eye_marker": "Dropped Eye of Ender",
+
+  "text.config.blindness-client.section.ender_eye_tracking": "Ender Eye Tracking",
+  "text.config.blindness-client.option.enableEnderEyeTrackingMarker": "Enable Ender Eye tracking marker",
+  "text.config.blindness-client.option.enableEnderEyeWorldMarker": "Show on-screen world marker",
+  "text.config.blindness-client.option.enableEnderEyeEdgeArrow": "Show off-screen edge arrow",
+  "text.config.blindness-client.option.showEnderEyeDistance": "Show Ender Eye distance",
+  "text.config.blindness-client.option.enableEnderEyeTrackingSound": "Enable tracking sound",
+  "text.config.blindness-client.option.enderEyeTrackingSoundIntervalTicks": "Tracking sound interval (ticks)",
+  "text.config.blindness-client.option.droppedEnderEyeMarkerDurationTicks": "Dropped marker duration (ticks)"
 }

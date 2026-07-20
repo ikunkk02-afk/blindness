@@ -1,6 +1,9 @@
 package com.ikunkk02afk.blindness.contact;
 
 import com.ikunkk02afk.blindness.BlindnessMod;
+import com.ikunkk02afk.blindness.accessibility.DetectedBlockType;
+import com.ikunkk02afk.blindness.accessibility.OreDetectionHelper;
+import com.ikunkk02afk.blindness.accessibility.OreType;
 import com.ikunkk02afk.blindness.component.BlindnessComponents;
 import com.ikunkk02afk.blindness.item.GuidanceCaneItem;
 import com.ikunkk02afk.blindness.item.ModItems;
@@ -92,6 +95,7 @@ public final class CaneContactService {
                         center, candidate.pos(), candidate.center(), candidate.visibleFaces()))
                 .toList();
         ServerPlayNetworking.send(player, new BlindnessPayloads.ContactReveal(sequence, center, entries));
+        sendOreReveal(player, center, sequence, entries, candidates);
         playMaterialFeedback(player, center, sweepContact ? 0.55F : 0.8F);
         return true;
     }
@@ -186,6 +190,54 @@ public final class CaneContactService {
     private static void playMiss(ServerPlayerEntity player) {
         player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP,
                 SoundCategory.PLAYERS, 0.25F, 1.35F);
+    }
+
+    private static void sendOreReveal(ServerPlayerEntity player, BlockPos center, int sequence,
+                                      List<BlindnessPayloads.ContactEntry> contactEntries,
+                                      List<RevealCandidate> candidates) {
+        if (!BlindnessMod.serverConfig().enableOreDetection()) return;
+
+        List<BlockPos> scannedPositions = candidates.stream().map(RevealCandidate::pos).toList();
+        List<OreDetectionHelper.OreEntry> oreEntries = OreDetectionHelper.detect(
+                player, scannedPositions, BlindnessMod.serverConfig().maxRenderedOres());
+
+        if (oreEntries.isEmpty()) return;
+
+        List<BlindnessPayloads.OreDetected> orePayloads = new ArrayList<>();
+        for (OreDetectionHelper.OreEntry entry : oreEntries) {
+            int faces = 0;
+            for (RevealCandidate candidate : candidates) {
+                if (candidate.pos().equals(entry.pos())) {
+                    faces = candidate.visibleFaces();
+                    break;
+                }
+            }
+            if (faces == 0) faces = 1; // fallback face
+            orePayloads.add(new BlindnessPayloads.OreDetected(entry.type().ordinal(), entry.pos(), faces));
+        }
+
+        ServerPlayNetworking.send(player, new BlindnessPayloads.OreContactReveal(
+                sequence, center, contactEntries, orePayloads));
+        playOreSoundIfNeeded(player, oreEntries);
+    }
+
+    private static void playOreSoundIfNeeded(ServerPlayerEntity player,
+                                             List<OreDetectionHelper.OreEntry> oreEntries) {
+        if (!BlindnessMod.serverConfig().enableOreSound()) return;
+        if (oreEntries.isEmpty()) return;
+
+        // Use the nearest ore entry for sound position.
+        OreDetectionHelper.OreEntry nearest = oreEntries.getFirst();
+        BlockPos pos = nearest.pos();
+        boolean rare = nearest.type().isRare();
+
+        SoundEvent oreSound = rare ? SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value()
+                : SoundEvents.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE.value();
+        float pitch = rare ? 1.35F : 1.0F;
+        float volume = 0.65F;
+
+        player.getWorld().playSound(null, pos, oreSound,
+                SoundCategory.PLAYERS, volume, pitch);
     }
 
     private static void playMaterialFeedback(ServerPlayerEntity player, BlockPos pos, float volume) {

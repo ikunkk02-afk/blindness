@@ -6,6 +6,7 @@ import com.ikunkk02afk.blindness.BlindnessMod;
 import com.ikunkk02afk.blindness.client.BlindnessClient;
 import com.ikunkk02afk.blindness.client.contact.ContactRevealManager;
 import com.ikunkk02afk.blindness.client.contact.RevealedBlock;
+import com.ikunkk02afk.blindness.client.ore.OreRevealManager;
 import com.ikunkk02afk.blindness.component.BlindnessComponents;
 import foundry.veil.api.client.render.VeilRenderSystem;
 import foundry.veil.api.client.render.framebuffer.AdvancedFbo;
@@ -139,6 +140,16 @@ public final class ContactOutlineRenderer {
                 BlockState state = client.world.getBlockState(pos);
                 if (state.isAir() && state.getFluidState().isEmpty()) continue;
 
+                // Determine if this block is a detected ore.
+                OreRevealManager.OreRevealEntry oreEntry = OreRevealManager.get(pos);
+                boolean isOre = oreEntry != null;
+                // Ore blocks get pulsating effect for emphasis.
+                if (isOre) {
+                    long age = now - oreEntry.startNanos();
+                    float pulse = (float) (0.7 + 0.3 * Math.sin(age / 200_000_000.0));
+                    alpha = Math.min(1F, alpha * pulse * 1.2F);
+                }
+
                 boolean fallback = !BlindnessClient.CONFIG.useDetailedModelOutlines()
                         || client.world.getBlockEntity(pos) != null;
                 if (!fallback && !state.getFluidState().isEmpty()
@@ -156,7 +167,9 @@ public final class ContactOutlineRenderer {
                                     pos.getZ() - cameraPos.z);
                             random.setSeed(state.getRenderingSeed(pos));
                             VertexConsumer raw = buffers.getBuffer(ContactRenderLayers.blockMask());
-                            VertexConsumer channel = new MaskChannelVertexConsumer(raw, reveal.isCenter(), alpha);
+                            VertexConsumer channel = isOre
+                                    ? new OreMaskVertexConsumer(raw, alpha)
+                                    : new MaskChannelVertexConsumer(raw, reveal.isCenter(), alpha);
                             client.getBlockRenderManager().getModelRenderer().render(client.world, model, state, pos,
                                     matrices, channel, true, random, state.getRenderingSeed(pos),
                                     OverlayTexture.DEFAULT_UV);
@@ -170,7 +183,7 @@ public final class ContactOutlineRenderer {
                 }
 
                 if (fallback) {
-                    drawVoxelFallback(client, buffers, matrices, cameraPos, reveal, state, alpha);
+                    drawVoxelFallback(client, buffers, matrices, cameraPos, reveal, state, alpha, isOre);
                     logFallback(state, null);
                 }
             }
@@ -200,16 +213,23 @@ public final class ContactOutlineRenderer {
 
     private static void drawVoxelFallback(MinecraftClient client, VertexConsumerProvider.Immediate buffers,
                                           MatrixStack matrices, Vec3d camera, RevealedBlock reveal,
-                                          BlockState state, float alpha) {
+                                          BlockState state, float alpha, boolean isOre) {
         BlockPos pos = reveal.pos();
         VoxelShape shape = state.getOutlineShape(client.world, pos, ShapeContext.of(client.player));
         if (shape.isEmpty() && !state.getFluidState().isEmpty()) {
             shape = state.getFluidState().getShape(client.world, pos);
         }
         if (shape.isEmpty()) return;
-        WorldRenderer.drawShapeOutline(matrices, buffers.getBuffer(ContactRenderLayers.lineMask()), shape,
-                pos.getX() - camera.x, pos.getY() - camera.y, pos.getZ() - camera.z,
-                reveal.isCenter() ? 1F : 0F, reveal.isCenter() ? 0F : 1F, 0F, alpha, false);
+        if (isOre) {
+            // Bright golden color for ore outlines.
+            WorldRenderer.drawShapeOutline(matrices, buffers.getBuffer(ContactRenderLayers.lineMask()), shape,
+                    pos.getX() - camera.x, pos.getY() - camera.y, pos.getZ() - camera.z,
+                    1F, 0.8F, 0F, alpha, false);
+        } else {
+            WorldRenderer.drawShapeOutline(matrices, buffers.getBuffer(ContactRenderLayers.lineMask()), shape,
+                    pos.getX() - camera.x, pos.getY() - camera.y, pos.getZ() - camera.z,
+                    reveal.isCenter() ? 1F : 0F, reveal.isCenter() ? 0F : 1F, 0F, alpha, false);
+        }
     }
 
     private static void logFallback(BlockState state, RuntimeException exception) {
@@ -273,6 +293,24 @@ public final class ContactOutlineRenderer {
         @Override public VertexConsumer vertex(float x, float y, float z) { delegate.vertex(x, y, z); return this; }
         @Override public VertexConsumer color(int red, int green, int blue, int alpha) {
             delegate.color(center ? 255 : 0, center ? 0 : 255, 0, Math.round(intensity * 255F));
+            return this;
+        }
+        @Override public VertexConsumer texture(float u, float v) { delegate.texture(u, v); return this; }
+        @Override public VertexConsumer overlay(int u, int v) { delegate.overlay(u, v); return this; }
+        @Override public VertexConsumer light(int u, int v) { delegate.light(u, v); return this; }
+        @Override public VertexConsumer normal(float x, float y, float z) { delegate.normal(x, y, z); return this; }
+    }
+
+    /**
+     * Vertex consumer for ore blocks — uses a bright golden-orange color
+     * with pulsating alpha for the mask rendering.
+     */
+    private record OreMaskVertexConsumer(VertexConsumer delegate, float intensity)
+            implements VertexConsumer {
+        @Override public VertexConsumer vertex(float x, float y, float z) { delegate.vertex(x, y, z); return this; }
+        @Override public VertexConsumer color(int red, int green, int blue, int alpha) {
+            // Bright golden: R=255, G=200, B=0
+            delegate.color(255, 200, 0, Math.round(intensity * 255F));
             return this;
         }
         @Override public VertexConsumer texture(float u, float v) { delegate.texture(u, v); return this; }

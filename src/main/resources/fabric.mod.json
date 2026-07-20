@@ -3,7 +3,7 @@
   "id": "blindness",
   "version": "${version}",
   "name": "失明症",
-  "description": "A gameplay-focused simulation of severe visual impairment using sound, memory, and a guidance cane.",
+  "description": "A Fabric mod for Minecraft 1.21.1 that simulates severe visual impairment. Navigate using a guidance cane, sound echoes, and accessibility markers — including an Ender Eye tracking system for directional awareness.",
   "authors": ["ikunkk02-afk"],
   "contact": {
     "sources": "https://github.com/ikunkk02-afk/blindness",

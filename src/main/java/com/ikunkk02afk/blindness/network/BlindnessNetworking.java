@@ -3,11 +3,14 @@ package com.ikunkk02afk.blindness.network;
 import com.ikunkk02afk.blindness.BlindnessMod;
 import com.ikunkk02afk.blindness.component.BlindnessComponents;
 import com.ikunkk02afk.blindness.config.BlindnessServerConfig;
+import com.ikunkk02afk.blindness.item.ModItems;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 public final class BlindnessNetworking {
     private BlindnessNetworking() {}
@@ -24,6 +27,10 @@ public final class BlindnessNetworking {
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.Animation.ID, BlindnessPayloads.Animation.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.TutorialPrompt.ID, BlindnessPayloads.TutorialPrompt.CODEC);
         PayloadTypeRegistry.playS2C().register(BlindnessPayloads.ServerConfig.ID, BlindnessPayloads.ServerConfig.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.OreContactReveal.ID, BlindnessPayloads.OreContactReveal.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.EnderEyeResult.ID, BlindnessPayloads.EnderEyeResult.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.StartEnderEyeTracking.ID, BlindnessPayloads.StartEnderEyeTracking.CODEC);
+        PayloadTypeRegistry.playS2C().register(BlindnessPayloads.StarterCaneGranted.ID, BlindnessPayloads.StarterCaneGranted.CODEC);
         PayloadTypeRegistry.playC2S().register(BlindnessPayloads.TutorialAck.ID, BlindnessPayloads.TutorialAck.CODEC);
         PayloadTypeRegistry.playC2S().register(BlindnessPayloads.ConfigRequest.ID, BlindnessPayloads.ConfigRequest.CODEC);
         PayloadTypeRegistry.playC2S().register(BlindnessPayloads.UpdateSoundAwarenessSettings.ID,
@@ -48,6 +55,7 @@ public final class BlindnessNetworking {
             BlindnessComponents.PLAYER.sync(player);
             sendServerConfig(player);
             sendSoundAwarenessSettings(player);
+            grantStarterCane(player);
             if (!BlindnessComponents.PLAYER.get(player).tutorialCompleted()) {
                 ServerPlayNetworking.send(player, BlindnessPayloads.TutorialPrompt.INSTANCE);
             }
@@ -72,5 +80,34 @@ public final class BlindnessNetworking {
         for (ServerPlayerEntity watcher : PlayerLookup.tracking(player)) {
             if (watcher != player) ServerPlayNetworking.send(watcher, payload);
         }
+    }
+
+    private static void grantStarterCane(ServerPlayerEntity player) {
+        if (!BlindnessMod.serverConfig().giveStarterCane()) return;
+        var component = BlindnessComponents.PLAYER.get(player);
+        if (component.starterCaneGranted()) return;
+
+        // Check if the player already has a guidance cane in inventory.
+        boolean hasCane = false;
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.isOf(ModItems.GUIDANCE_CANE)) {
+                hasCane = true;
+                break;
+            }
+        }
+
+        if (!hasCane) {
+            ItemStack cane = new ItemStack(ModItems.GUIDANCE_CANE);
+            if (!player.getInventory().insertStack(cane)) {
+                // Inventory full — drop at player's feet.
+                player.dropItem(cane, false);
+                player.sendMessage(Text.translatable("msg.blindness.starter_cane_dropped"), true);
+            } else {
+                ServerPlayNetworking.send(player, BlindnessPayloads.StarterCaneGranted.INSTANCE);
+            }
+        }
+
+        component.setStarterCaneGranted(true);
     }
 }

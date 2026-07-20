@@ -2,6 +2,13 @@
   "required": true,
   "package": "com.ikunkk02afk.blindness.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": ["PlayerEntityMixin", "EntitySoundMixin", "ServerPlayNetworkHandlerMixin"],
+  "mixins": [
+    "PlayerEntityMixin",
+    "EntitySoundMixin",
+    "ServerPlayNetworkHandlerMixin",
+    "EyeOfEnderEntityMixin",
+    "EnderEyeItemMixin",
+    "EntityDiscardMixin"
+  ],
   "injectors": { "defaultRequire": 1 }
 }

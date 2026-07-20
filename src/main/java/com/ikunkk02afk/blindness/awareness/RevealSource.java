@@ -3,6 +3,7 @@ package com.ikunkk02afk.blindness.awareness;
 public enum RevealSource {
     CANE_CENTER,
     CANE_ADJACENT,
+    CANE_ORE,
     ENTITY_FOOTSTEP,
     ENTITY_AMBIENT,
     ENTITY_DANGER;

@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class BlindnessPayloads {
     private BlindnessPayloads() {}
@@ -60,7 +61,7 @@ public final class BlindnessPayloads {
     public record ContactReveal(int sequence, BlockPos center, List<ContactEntry> entries) implements CustomPayload {
         public static final int MAX_ENTRIES = ContactRevealMath.MAX_REVEALS_PER_CONTACT;
         public static final Id<ContactReveal> ID = new Id<>(BlindnessMod.id("contact_reveal"));
-        private static final PacketCodec<RegistryByteBuf, List<ContactEntry>> ENTRIES_CODEC = PacketCodecs.collection(
+        static final PacketCodec<RegistryByteBuf, List<ContactEntry>> ENTRIES_CODEC = PacketCodecs.collection(
                 size -> new ArrayList<>(Math.min(size, MAX_ENTRIES)), ContactEntry.CODEC, MAX_ENTRIES);
         public static final PacketCodec<RegistryByteBuf, ContactReveal> CODEC = PacketCodec.tuple(
                 PacketCodecs.VAR_INT, ContactReveal::sequence, BlockPos.PACKET_CODEC, ContactReveal::center,
@@ -208,6 +209,95 @@ public final class BlindnessPayloads {
                 PacketCodecs.VAR_INT, ServerConfig::tapCooldown, PacketCodecs.VAR_INT, ServerConfig::sweepCooldown,
                 PacketCodecs.VAR_INT, ServerConfig::pathTtl, PacketCodecs.VAR_INT, ServerConfig::maxEntries,
                 ServerConfig::new);
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    // ──── Ore detection payloads ────
+
+    public record OreDetected(int oreType, BlockPos pos, int faces) {
+        public static final PacketCodec<RegistryByteBuf, OreDetected> CODEC = PacketCodec.tuple(
+                PacketCodecs.VAR_INT, OreDetected::oreType,
+                BlockPos.PACKET_CODEC, OreDetected::pos,
+                PacketCodecs.VAR_INT, OreDetected::faces,
+                OreDetected::new);
+
+        public OreDetected {
+            if (oreType < 0 || oreType >= com.ikunkk02afk.blindness.accessibility.OreType.values().length) {
+                oreType = com.ikunkk02afk.blindness.accessibility.OreType.MODDED_OR_UNKNOWN.ordinal();
+            }
+            faces = faces & 0x3F;
+        }
+    }
+
+    public record OreContactReveal(int sequence, BlockPos center, List<ContactEntry> contactEntries,
+                                   List<OreDetected> ores) implements CustomPayload {
+        public static final int MAX_ORE_ENTRIES = 16;
+        public static final Id<OreContactReveal> ID = new Id<>(BlindnessMod.id("ore_contact_reveal"));
+        private static final PacketCodec<RegistryByteBuf, List<OreDetected>> ORES_CODEC = PacketCodecs.collection(
+                size -> new ArrayList<>(Math.min(size, MAX_ORE_ENTRIES)), OreDetected.CODEC, MAX_ORE_ENTRIES);
+        public static final PacketCodec<RegistryByteBuf, OreContactReveal> CODEC = PacketCodec.tuple(
+                PacketCodecs.VAR_INT, OreContactReveal::sequence,
+                BlockPos.PACKET_CODEC, OreContactReveal::center,
+                ContactReveal.ENTRIES_CODEC, OreContactReveal::contactEntries,
+                ORES_CODEC, OreContactReveal::ores,
+                OreContactReveal::new);
+
+        public OreContactReveal {
+            contactEntries = List.copyOf(contactEntries.size() > ContactReveal.MAX_ENTRIES
+                    ? contactEntries.subList(0, ContactReveal.MAX_ENTRIES) : contactEntries);
+            ores = List.copyOf(ores.size() > MAX_ORE_ENTRIES
+                    ? ores.subList(0, MAX_ORE_ENTRIES) : ores);
+        }
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    // ──── Ender eye result payload ────
+
+    public record EnderEyeResult(int resultType, double x, double y, double z) implements CustomPayload {
+        public static final Id<EnderEyeResult> ID = new Id<>(BlindnessMod.id("ender_eye_result"));
+        public static final PacketCodec<RegistryByteBuf, EnderEyeResult> CODEC = PacketCodec.tuple(
+                PacketCodecs.VAR_INT, EnderEyeResult::resultType,
+                PacketCodecs.DOUBLE, EnderEyeResult::x,
+                PacketCodecs.DOUBLE, EnderEyeResult::y,
+                PacketCodecs.DOUBLE, EnderEyeResult::z,
+                EnderEyeResult::new);
+
+        public boolean isValid() {
+            return (resultType == 0 || resultType == 1) && Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z);
+        }
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    // ──── Ender eye tracking payloads ────
+
+    public record StartEnderEyeTracking(int entityId, long uuidMost, long uuidLeast) implements CustomPayload {
+        public static final Id<StartEnderEyeTracking> ID = new Id<>(BlindnessMod.id("start_ender_eye_tracking"));
+        public static final PacketCodec<RegistryByteBuf, StartEnderEyeTracking> CODEC = PacketCodec.tuple(
+                PacketCodecs.VAR_INT, StartEnderEyeTracking::entityId,
+                PacketCodecs.VAR_LONG, StartEnderEyeTracking::uuidMost,
+                PacketCodecs.VAR_LONG, StartEnderEyeTracking::uuidLeast,
+                StartEnderEyeTracking::new);
+
+        public UUID getEntityUuid() {
+            return new UUID(uuidMost, uuidLeast);
+        }
+
+        public boolean isValid() {
+            return entityId >= 0;
+        }
+        @Override public Id<? extends CustomPayload> getId() { return ID; }
+    }
+
+    public enum EnderEyeTrackingState {
+        FLYING, DROPPED, SHATTERED, CLEARED
+    }
+
+    // ──── Starter cane granted overlay payload ────
+
+    public record StarterCaneGranted() implements CustomPayload {
+        public static final Id<StarterCaneGranted> ID = new Id<>(BlindnessMod.id("starter_cane_granted"));
+        public static final StarterCaneGranted INSTANCE = new StarterCaneGranted();
+        public static final PacketCodec<RegistryByteBuf, StarterCaneGranted> CODEC = PacketCodec.unit(INSTANCE);
         @Override public Id<? extends CustomPayload> getId() { return ID; }
     }
 }

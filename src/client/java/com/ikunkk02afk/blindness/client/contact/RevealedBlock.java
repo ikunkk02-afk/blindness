@@ -52,6 +52,7 @@ public final class RevealedBlock {
     private static int priority(RevealSource source) {
         return switch (source) {
             case CANE_CENTER -> 5;
+            case CANE_ORE -> 5;
             case CANE_ADJACENT -> 4;
             case ENTITY_DANGER -> 3;
             case ENTITY_AMBIENT -> 2;

@@ -1,34 +1,51 @@
 # Changelog
 
-## [1.0.0] - 2026-07-19
+## [1.1.0] - 2026-07-20
 
 ### Added
-- Complete visual darkness with pitch-black world rendering via Veil post-processing pipeline
-- Guidance cane item with tap (short click) and sweep (hold) probing modes
-- Accurate baked-model contact outlines with glow, occlusion, and depth masking
-- Cliff and drop detection system: four-block forward sampling, dual-ping for drops, triple severe alert for lava/void
-- Trip-and-fall mechanics: hazard detection (obstacles, mobs, elevation changes), balance meter, movement lock, get-up animation
-- Creature sound echo system: on-screen markers at correct body-anchored height, screen-edge markers for off-screen sounds
-- Entity sound classification across eight categories (footstep, movement, ambient, hurt, attack, death)
-- Vague hostile awareness: periodic spatial query, non-specific text warnings, directional subtitle blurring
-- Configurable listening chunk radius (0/1/2) and block outline reveal radius (0–4), synced and persisted server-side
-- Information mod compatibility check: pre-world-entry detection of map/minimap/block-info-HUD mods with readable conflict screen
-- Hard-allowed recipe viewer list (JEI, REI, EMI) bypasses blocking
-- owo-lib config UI with Mod Menu integration and in-game keybind (B)
-- Full Chinese (zh_cn.json) and English (en_us.json) localization
-- Server-authoritative gameplay logic (cane contacts, sound awareness, cliffs, falls) with client rendering only
-- Unit test suite covering sound classification, trip damage, contact math, payload bounds, chunk range, and resource integrity
 
-### Changed
-- Replaced initial prototype wave/scan system with contact-based cane probing using real collision rays
-- Replaced generic box outlines with baked-model outlines using block model vertex data and alpha-cutout textures
-- Upgraded cliff warnings from simple drop detection to configurable server-side sampling with cooldown and severity tiers
-- Enhanced sound echo display with body-anchored positioning, categorized heights, and occlusion-aware rendering
+- 首次进入世界时自动发放导盲杖（每人一次）
+- 导盲杖矿物识别系统：特殊轮廓、名称、数量、方向、距离
+- 矿物方向性声音提示
+- 末影之眼破碎提示（文字 + 声音）
+- 末影之眼掉落提示（文字 + 方向 + 距离 + 声音）
+- 末影之眼屏幕内追踪标识（绿色呼吸圆环 + 菱形图标 + 距离）
+- 末影之眼屏幕外方向箭头（边缘定位 + 实时距离 + 高度差提示）
+- 末影之眼掉落物短暂追踪（约 9 秒，拾取后立即清除）
+- 飞行途中的可选提示音（间隔可配，默认 25 tick）
+- 7 个客户端配置项（追踪标识各项开关、声音间隔、掉落持续时长）
 
 ### Fixed
-- Pause menu no longer reveals the world behind it
-- First-person outlines now render with the same depth-correct mask as third-person
-- Outline rendering properly uses block model data instead of degrading to full-cube bounding boxes
-- Sound echoes correctly anchor to creature body height rather than foot-level or sky position
-- Off-screen sound echoes project to screen edges using camera and projection matrices
-- Entity sound classification now safely handles unregistered SoundEvents (fixes axolotl crash)
+
+- 修复 `Entity.discard()` 是 `final` 方法导致 `@At(INVOKE)` Mixin 无法注入的问题
+- 修复末影之眼结束后的方向提示不明确（现在有实时追踪代替）
+
+### Compatibility
+
+- 保持对 Sodium 和 Iris 的兼容处理（Veil 降级、纯 HUD 渲染层）
+- 保持对 Veil 的兼容（世界标识使用独立投影矩阵，不写入深度缓冲）
+- DashLoader 仍不受支持
+
+### Docs
+
+- 新增完整中文 `README.md`
+- 新增英文 `README_EN.md`
+- 更新 `fabric.mod.json` 描述
+
+---
+
+## [0.1.0] - 前期开发
+
+初始版本，包含：
+
+- 失明画面后处理（Veil + HUD 降级）
+- 导盲杖接触探测与方块轮廓
+- 生物声音感知与声纹标记
+- 危险生物模糊警告
+- 悬崖边缘警告（文字 + 旁白 + 镜头）
+- 奔跑/碰撞摔倒机制
+- 字幕模糊化
+- 不兼容模组屏蔽（DashLoader、小地图、信息 HUD）
+- 客户端/服务端配置系统
+- `/blindness` 命令
+- 中英文语言支持

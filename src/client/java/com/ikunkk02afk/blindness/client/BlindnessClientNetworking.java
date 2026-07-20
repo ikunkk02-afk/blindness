@@ -3,6 +3,10 @@ package com.ikunkk02afk.blindness.client;
 import com.ikunkk02afk.blindness.client.animation.BlindnessAnimations;
 import com.ikunkk02afk.blindness.client.contact.ContactRevealManager;
 import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerManager;
+import com.ikunkk02afk.blindness.client.ore.OreRevealManager;
+import com.ikunkk02afk.blindness.client.ore.OreHudRenderer;
+import com.ikunkk02afk.blindness.client.ender.EnderEyeResultHandler;
+import com.ikunkk02afk.blindness.client.ender.EnderEyeTrackerClient;
 import com.ikunkk02afk.blindness.network.BlindnessPayloads;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -138,11 +142,44 @@ public final class BlindnessClientNetworking {
                     BlindnessClient.CONFIG.listeningChunkRadius(actualListeningRadius);
                     BlindnessClient.CONFIG.entitySoundBlockRevealRadius(actualBlockRadius);
                 }));
+        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.OreContactReveal.ID, (payload, context) -> context.client().execute(() -> {
+            if (context.client().player == null || payload.sequence() < 0 || payload.contactEntries().isEmpty()
+                    || payload.contactEntries().size() > BlindnessPayloads.ContactReveal.MAX_ENTRIES
+                    || payload.ores().size() > BlindnessPayloads.OreContactReveal.MAX_ORE_ENTRIES
+                    || payload.center().getSquaredDistance(context.client().player.getPos()) > 36.0) return;
+            // Validate contact entries
+            int centers = 0;
+            for (BlindnessPayloads.ContactEntry entry : payload.contactEntries()) {
+                if (!entry.isValid()
+                        || entry.resolve(payload.center()).getSquaredDistance(context.client().player.getPos()) > 49.0) return;
+                if (entry.isCenter()) centers++;
+            }
+            if (centers != 1) return;
+            // Accept reveals
+            ContactRevealManager.accept(payload.center(), payload.contactEntries());
+            OreRevealManager.accept(payload.center(), payload.ores());
+            OreHudRenderer.show(payload.center(), payload.ores());
+        }));
+        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.EnderEyeResult.ID, (payload, context) -> context.client().execute(() -> {
+            if (context.client().player == null || !payload.isValid()) return;
+            EnderEyeResultHandler.handle(payload.resultType(), payload.x(), payload.y(), payload.z());
+            EnderEyeTrackerClient.onResult(payload.resultType(), payload.x(), payload.y(), payload.z());
+        }));
+        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.StartEnderEyeTracking.ID, (payload, context) -> context.client().execute(() -> {
+            if (context.client().player == null || !payload.isValid()) return;
+            EnderEyeTrackerClient.startTracking(payload.entityId(), payload.getEntityUuid());
+        }));
+        ClientPlayNetworking.registerGlobalReceiver(BlindnessPayloads.StarterCaneGranted.ID, (payload, context) -> context.client().execute(() -> {
+            if (context.client().player != null) {
+                context.client().player.sendMessage(Text.translatable("msg.blindness.starter_cane_granted"), true);
+            }
+        }));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             actualListeningRadius = actualBlockRadius = -1;
             requestedListeningRadius = requestedBlockRadius = -1;
             SoundEchoMarkerManager.clear();
             ClientBlindnessState.clear();
+            EnderEyeTrackerClient.clear();
         });
     }
 

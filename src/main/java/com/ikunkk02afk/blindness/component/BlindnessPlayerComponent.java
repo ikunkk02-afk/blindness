@@ -19,5 +19,9 @@ public interface BlindnessPlayerComponent extends AutoSyncedComponent {
     void incrementSuccessfulScans();
     void setTutorialCompleted(boolean value);
     void setSoundAwarenessSettings(int listeningChunkRadius, int blockRevealRadius);
+
+    boolean starterCaneGranted();
+    void setStarterCaneGranted(boolean value);
+
     void reset();
 }

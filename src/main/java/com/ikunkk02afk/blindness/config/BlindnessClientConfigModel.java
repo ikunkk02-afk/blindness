@@ -53,6 +53,19 @@ public class BlindnessClientConfigModel {
     public boolean showTutorial = true;
     @RangeConstraint(min = 0.0, max = 1.0, decimalPlaces = 2) public double soundPromptVolume = 0.8;
 
+    public boolean enableOreHud = true;
+    public boolean enableEnderEyeResultHint = true;
+
+    // ── Ender eye tracking marker ──
+    @SectionHeader("ender_eye_tracking")
+    public boolean enableEnderEyeTrackingMarker = true;
+    public boolean enableEnderEyeWorldMarker = true;
+    public boolean enableEnderEyeEdgeArrow = true;
+    public boolean showEnderEyeDistance = true;
+    public boolean enableEnderEyeTrackingSound = true;
+    @RangeConstraint(min = 10, max = 100) public int enderEyeTrackingSoundIntervalTicks = 25;
+    @RangeConstraint(min = 40, max = 600) public int droppedEnderEyeMarkerDurationTicks = 180;
+
     public boolean cliffWarningText = true;
     public boolean cliffWarningNarration = true;
     public boolean cliffCameraFeedback = true;

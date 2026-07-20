@@ -93,5 +93,48 @@
   "screen.blindness.blocked.category.map": "地图模组",
   "screen.blindness.blocked.category.info_hud": "信息HUD模组",
   "screen.blindness.blocked.category.xray": "世界透视模组",
-  "screen.blindness.blocked.row": "%1$s（%2$s）%3$s — %4$s"
+  "screen.blindness.blocked.row": "%1$s（%2$s）%3$s — %4$s",
+
+  "msg.blindness.starter_cane_granted": "你获得了一根导盲杖",
+  "msg.blindness.starter_cane_dropped": "背包已满，导盲杖已掉落在脚边",
+
+  "ore.blindness.coal": "煤矿石",
+  "ore.blindness.iron": "铁矿石",
+  "ore.blindness.copper": "铜矿石",
+  "ore.blindness.gold": "金矿石",
+  "ore.blindness.redstone": "红石矿石",
+  "ore.blindness.lapis": "青金石矿石",
+  "ore.blindness.diamond": "钻石矿石",
+  "ore.blindness.emerald": "绿宝石矿石",
+  "ore.blindness.quartz": "下界石英矿石",
+  "ore.blindness.ancient_debris": "远古残骸",
+
+  "hud.blindness.ore_entry": "探测到：%s ×%s｜%s %s格",
+
+  "direction.blindness.front": "前方",
+  "direction.blindness.front_right": "右前方",
+  "direction.blindness.right": "右侧",
+  "direction.blindness.back_right": "右后方",
+  "direction.blindness.back": "后方",
+  "direction.blindness.back_left": "左后方",
+  "direction.blindness.left": "左侧",
+  "direction.blindness.front_left": "左前方",
+  "direction.blindness.above": "上方",
+  "direction.blindness.below": "下方",
+
+  "msg.blindness.ender_eye_shattered": "末影之眼已破碎",
+  "msg.blindness.ender_eye_dropped": "末影之眼已掉落｜%s · 距离约%s格",
+
+  "hud.blindness.ender_eye_marker": "末影之眼",
+  "hud.blindness.ender_eye_distance": "%s 格",
+  "hud.blindness.dropped_ender_eye_marker": "掉落的末影之眼",
+
+  "text.config.blindness-client.section.ender_eye_tracking": "末影之眼追踪",
+  "text.config.blindness-client.option.enableEnderEyeTrackingMarker": "启用末影之眼追踪标识",
+  "text.config.blindness-client.option.enableEnderEyeWorldMarker": "显示屏幕内世界追踪标识",
+  "text.config.blindness-client.option.enableEnderEyeEdgeArrow": "显示屏幕外方向箭头",
+  "text.config.blindness-client.option.showEnderEyeDistance": "显示末影之眼距离",
+  "text.config.blindness-client.option.enableEnderEyeTrackingSound": "启用追踪提示音",
+  "text.config.blindness-client.option.enderEyeTrackingSoundIntervalTicks": "追踪提示音间隔 (Tick)",
+  "text.config.blindness-client.option.droppedEnderEyeMarkerDurationTicks": "掉落追踪标识持续 (Tick)"
 }

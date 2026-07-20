@@ -30,7 +30,7 @@ public final class BlindnessMod implements ModInitializer {
         CaneContactService.register();
         HostileAwarenessService.register();
         FallStateManager.register();
-        LOGGER.info("Blindness 0.1.0 initialized");
+        LOGGER.info("Blindness 1.1.0 initialized");
     }
 
     public static BlindnessServerConfig serverConfig() {

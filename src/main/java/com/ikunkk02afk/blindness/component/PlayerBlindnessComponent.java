@@ -16,6 +16,7 @@ public final class PlayerBlindnessComponent implements BlindnessPlayerComponent 
     private boolean tutorialCompleted;
     private int listeningChunkRadius = 1;
     private int entitySoundBlockRevealRadius = 2;
+    private boolean starterCaneGranted;
 
     public PlayerBlindnessComponent(PlayerEntity owner) {
         this.owner = owner;
@@ -29,6 +30,7 @@ public final class PlayerBlindnessComponent implements BlindnessPlayerComponent 
     @Override public boolean tutorialCompleted() { return tutorialCompleted; }
     @Override public int listeningChunkRadius() { return listeningChunkRadius; }
     @Override public int entitySoundBlockRevealRadius() { return entitySoundBlockRevealRadius; }
+    @Override public boolean starterCaneGranted() { return starterCaneGranted; }
 
     @Override public void setBlindnessEnabled(boolean value) { blindnessEnabled = value; sync(); }
     @Override public void setVisualMode(String value) { visualMode = DEFAULT_VISUAL_MODE.equals(value) ? value : DEFAULT_VISUAL_MODE; sync(); }
@@ -41,6 +43,7 @@ public final class PlayerBlindnessComponent implements BlindnessPlayerComponent 
         entitySoundBlockRevealRadius = Math.clamp(blockRadius, 0, 4);
         sync();
     }
+    @Override public void setStarterCaneGranted(boolean value) { starterCaneGranted = value; sync(); }
 
     @Override
     public void reset() {
@@ -52,6 +55,7 @@ public final class PlayerBlindnessComponent implements BlindnessPlayerComponent 
         tutorialCompleted = false;
         listeningChunkRadius = 1;
         entitySoundBlockRevealRadius = 2;
+        starterCaneGranted = false;
         sync();
     }
 
@@ -67,6 +71,7 @@ public final class PlayerBlindnessComponent implements BlindnessPlayerComponent 
                 ? Math.clamp(tag.getInt("ListeningChunkRadius"), 0, 2) : 1;
         entitySoundBlockRevealRadius = tag.contains("EntitySoundBlockRevealRadius")
                 ? Math.clamp(tag.getInt("EntitySoundBlockRevealRadius"), 0, 4) : 2;
+        starterCaneGranted = tag.getBoolean("StarterCaneGranted");
     }
 
     @Override
@@ -79,6 +84,7 @@ public final class PlayerBlindnessComponent implements BlindnessPlayerComponent 
         tag.putBoolean("TutorialCompleted", tutorialCompleted);
         tag.putInt("ListeningChunkRadius", listeningChunkRadius);
         tag.putInt("EntitySoundBlockRevealRadius", entitySoundBlockRevealRadius);
+        tag.putBoolean("StarterCaneGranted", starterCaneGranted);
     }
 
     @Override

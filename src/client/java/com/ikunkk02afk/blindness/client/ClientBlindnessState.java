@@ -2,6 +2,7 @@ package com.ikunkk02afk.blindness.client;
 
 import com.ikunkk02afk.blindness.client.contact.ContactRevealManager;
 import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerManager;
+import com.ikunkk02afk.blindness.client.ender.EnderEyeTrackerClient;
 import com.ikunkk02afk.blindness.component.BlindnessComponents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.RegistryKey;
@@ -47,6 +48,7 @@ public final class ClientBlindnessState {
         boolean dead = client.player.isDead();
         if (dead && !wasDead) ContactRevealManager.clear();
         if (dead && !wasDead) SoundEchoMarkerManager.clear();
+        if (dead && !wasDead) EnderEyeTrackerClient.clear();
         wasDead = dead;
         boolean blindnessEnabled = BlindnessComponents.PLAYER.maybeGet(client.player)
                 .map(component -> component.blindnessEnabled()).orElse(false);
@@ -94,6 +96,7 @@ public final class ClientBlindnessState {
     private static void clearTransient() {
         ContactRevealManager.clear();
         SoundEchoMarkerManager.clear();
+        EnderEyeTrackerClient.clear();
         controlsUnlockNanos = 0;
         fallStartNanos = 0;
         fallDurationNanos = 0;

@@ -7,11 +7,17 @@ import com.ikunkk02afk.blindness.client.render.BlindnessBlackoutRenderer;
 import com.ikunkk02afk.blindness.client.render.ContactOutlineRenderer;
 import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerManager;
 import com.ikunkk02afk.blindness.client.sound.SoundEchoMarkerRenderer;
+import com.ikunkk02afk.blindness.client.ore.OreHudRenderer;
+import com.ikunkk02afk.blindness.client.ore.OreRevealManager;
+import com.ikunkk02afk.blindness.client.ender.EnderEyeResultHandler;
+import com.ikunkk02afk.blindness.client.ender.EnderEyeTrackerClient;
+import com.ikunkk02afk.blindness.client.ender.EnderEyeTrackingRenderer;
 import com.ikunkk02afk.blindness.config.BlindnessClientConfig;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
@@ -40,6 +46,9 @@ public final class BlindnessClient implements ClientModInitializer {
         BlindnessBlackoutRenderer.register();
         ContactOutlineRenderer.register();
         SoundEchoMarkerRenderer.register();
+        HudRenderCallback.EVENT.register(OreHudRenderer::render);
+        HudRenderCallback.EVENT.register(EnderEyeResultHandler::render);
+        HudRenderCallback.EVENT.register(EnderEyeTrackingRenderer::render);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(
                 new SimpleSynchronousResourceReloadListener() {
                     @Override public Identifier getFabricId() {
@@ -51,6 +60,10 @@ public final class BlindnessClient implements ClientModInitializer {
                         SoundEchoMarkerRenderer.clearProjectionState();
                         ContactOutlineRenderer.clearModelCache();
                         BlindnessPostProcessor.cleanup();
+                        OreRevealManager.clear();
+                        OreHudRenderer.clear();
+                        EnderEyeResultHandler.clear();
+                        EnderEyeTrackerClient.clear();
                     }
                 });
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
@@ -62,6 +75,7 @@ public final class BlindnessClient implements ClientModInitializer {
             while (settingsKey.wasPressed()) client.setScreen(createConfigScreen(client.currentScreen));
             ClientBlindnessState.tick(client);
             SoundEchoMarkerManager.tick(System.nanoTime());
+            EnderEyeTrackerClient.tick();
             BlindnessClientNetworking.tickSettingsSync();
             BlindnessPostProcessor.tick(client);
             if (ClientBlindnessState.controlsLocked()) {

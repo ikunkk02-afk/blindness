@@ -1,234 +1,261 @@
 [简体中文](README.md) | English
 
-# Blindness
+# Blindness (失明症)
 
-**Blindness** is an immersive Fabric mod for Minecraft. The world is pitch black.
-Players rely on a guidance cane, sound echoes, block outlines, and vague danger
-hints to navigate.
+**Blindness** is a Fabric mod for Minecraft 1.21.1 that simulates severe visual impairment. Your vision is heavily restricted — navigate using a guidance cane, sound echoes, block outlines, and accessibility markers.
 
-The world is not dimmed — it is fully dark. Perception comes through touch-like
-probing and sound awareness.
+> This is a gameplay mod designed to provide a challenging but playable blindness experience. It is not a medical simulation.
 
-> **Important**: This mod gamifies environmental perception methods that some
-> individuals with severe visual impairments may use. It is not a representation
-> of all blind or visually impaired people's real experiences, nor a complete
-> simulation of medical or life conditions.
+---
 
-## Basic Info
+## Features
 
-| Item | Detail |
-|------|--------|
-| Minecraft | 1.21.1 |
-| Mod Loader | Fabric |
-| Java | 21 |
-| Version | 1.0.0 |
-| License | MIT |
-| Installation | Client (required), Server (required) |
-| GitHub | https://github.com/ikunkk02-afk/blindness |
+### Visual Restriction
 
-The mod must be installed on both client and server. The server runs cane
-contacts, sound awareness, cliff detection, and fall logic. The client alone
-is not sufficient.
+- Near-total black screen; only faint nearby light remains
+- Veil post-processing for effects and block outlines
+- HUD-based fallback black screen when Veil is unavailable
+- Compatible with Sodium and Iris
 
-## Core Features
+### Guidance Cane
 
-- **Completely dark world**: Pitch-black rendering when blindness is active. GUI, inventory, and menus display normally. The world stays black behind pause screens.
-- **Guidance cane probing**: Tap or sweep blocks with the guidance cane to briefly reveal the hit block and its direct neighbors with accurate model outlines.
-- **Accurate model outlines**: Grass, flowers, torches, fences, stairs, slabs — all show true baked-model outlines, not generic boxes.
-- **Cliff and drop warnings**: Detect drops of 2+ blocks, lava, or void ahead when probing with the cane. Provides audio and text warnings.
-- **Fall system**: Sprinting into obstacles, mobs, or unscanned elevation changes can cause a fall, followed by a brief movement lock and get-up animation.
-- **Creature sound echoes**: When a creature actually makes a sound, an on-screen echo marker appears at the correct direction and height. The marker stays at the source position.
-- **Vague hostile warnings**: Detection of nearby hostiles produces a non-specific warning with no name, count, or distance.
-- **Configurable listening range**: Creature sound listening radius (0/1/2 chunk radius) and block outline reveal radius (0–4) are adjustable.
-- **Information mod compatibility check**: Map, minimap, and block-info HUD mods are detected before entering a world to preserve the intended experience.
-- **Mod Menu + in-game config**: Open the owo-lib config screen via Mod Menu or the `B` key to adjust visuals, audio, and accessibility options.
+- New players receive one guidance cane automatically on first join (once per player)
+- **Right-click**: probe forward, revealing the hit block and its six direct neighbors as outlines
+- **Hold right-click**: continuous probing of a few blocks
+- Outlines fade in, hold briefly, then fade out
+- Different feedback for regular blocks vs. ores
 
-## Guidance Cane
+### Ore Detection
 
-### Recipe
+- Ores detected by the cane display a distinct orange outline
+- HUD shows ore name, count, direction, and distance
+- Directional sound cues for detected ores
+- Supported vanilla ores: coal, iron, copper, gold, redstone, lapis, diamond, emerald, nether quartz, ancient debris
+- Compatible with modded ores that use Fabric's common ore tags
+- **Not X-ray**: only ores within actual cane probe range are revealed
 
-|   |   |   |
-|---|---|---|
-| Iron Ingot | White Wool |   |
-|   | Stick |   |
-|   | Stick |   |
+### Sound Awareness
 
-Yields 1 Guidance Cane.
+- Creature sounds produce "sound echo" markers on the HUD
+- Directional origin indicators distinguish neutral from hostile creatures
+- Vague warning when hostile entities are nearby
+- Wall occlusion blurs sounds behind blocks
 
-### Usage
+### Ender Eye Accessibility
 
-- **Tap (click and release quickly)**: Hits a block within 4 blocks. The hit block and its orthogonal neighbors briefly show baked-model outlines.
-- **Sweep (hold right-click)**: Makes 4 directional contacts over one second (two left, two right), covering more area.
+- While flying: on-screen tracking marker (green ring + distance)
+- While off-screen: edge arrow pointing toward the eye
+- Real-time distance display with height indicators
+- Dropped eyes: brief item tracking (~9 seconds)
+- Shattered eyes: clear notification with sound
+- **Only tracks eyes thrown by you** — no stronghold coordinates revealed
 
-### Outline Behavior
+### Other Mechanics
 
-- Outlines use the block's real rendered model (grass, fences, stairs etc. show true shape).
-- Center block has thicker, brighter outlines with glow; adjacent blocks are slightly thinner and dimmer.
-- Outlines persist ~5 seconds then fade; new contacts refresh the timer.
-- Outlines respect occlusion — blocks behind walls are never revealed.
-- Nothing is shown if the cane hits empty air.
+- Running too fast or hitting walls may cause tripping
+- Cliff edge warnings (text + narration + camera feedback)
+- First-person fall camera tilt
+- Subtitle direction blurring
+- Optional blocking of minimap and info-HUD mods
 
-## Sound Echo System
-
-- **Only actual sounds create echoes**: A marker appears only when a creature plays a sound. Silent immobile creatures never produce persistent markers.
-- **Echo position is fixed**: The marker records the sound position and height at emission time. If the creature moves, the old marker remains at its original position and fades.
-- **No entity tracking**: Names, health, equipment, count, type, and exact distance are never shown.
-- **Off-screen echoes**: Sounds behind the player appear as semi-circular markers at the screen edge.
-- **Occluded sounds**: Wall-blocked echoes are more blurred and fragmented but do not reveal hidden blocks.
-- **Body-anchored**: Markers sit at creature body height (footsteps ~35%, calls ~65% of height).
-- **Default listening range**: 3×3 chunks (player chunk + 8 neighbors).
-- **Configurable**: Chunk radius 0/1/2; block outline reveal radius 0–4.
-
-## Cliff Warnings
-
-- Requires active cane probing. Standing empty-handed gives no terrain awareness.
-- Samples the forward path within 4 blocks using real collision surfaces.
-- 1-block drops are safe; 2–3 blocks trigger a dual-ping warning; 4+ blocks, lava, or void trigger a triple severe alert.
-- Depth, coordinates, and safe paths are never shown. The player is never moved or turned.
-- Same edge and facing has a 2-second cooldown.
-
-## Fall Mechanics
-
-- Sprinting into obstacles, undergoing horizontal collision, or hitting unscanned elevation changes can cause a trip.
-- Colliding with creatures has size-dependent risk (larger mobs = higher risk).
-- Walking slowly, sneaking, or previously scanning the path greatly reduces trip risk.
-- Tripping locks movement and actions for ~5 seconds, followed by automatic recovery.
-- Tripping on grass, snow, or wool causes no damage; hard ground (stone, metal) may deal minor damage.
-- Normal walking on flat ground never randomly trips. A protection cooldown follows each fall.
-
-## Installation
-
-1. Install Minecraft 1.21.1.
-2. Install compatible [Fabric Loader](https://fabricmc.net/) (≥ 0.19.3).
-3. Ensure Java 21 is used.
-4. Install all required dependencies (see table below).
-5. Place this mod and all dependencies in the `mods` folder.
-6. Launch the game.
-
-## Dependencies
-
-| Dependency | Purpose | Required |
-|------------|---------|----------|
-| [Fabric API](https://modrinth.com/mod/fabric-api) | Base API | Required |
-| [Veil](https://modrinth.com/mod/veil) | Rendering pipeline (blackout + depth mask) | Required |
-| [Cardinal Components API](https://modrinth.com/mod/cardinal-components-api) | Player data persistence (CCA) | Required |
-| [owo-lib](https://modrinth.com/mod/owo-lib) | Config UI | Required |
-| [Player Animator](https://modrinth.com/mod/playeranimator) | Cane & fall animations | Required |
-| [Mod Menu](https://modrinth.com/mod/modmenu) | Config entry point | Recommended (client only) |
-
-See `fabric.mod.json` `depends` and `recommends` for exact version requirements.
+---
 
 ## Controls
 
-| Action | Key |
-|--------|-----|
-| Use guidance cane | Right Click |
-| Open settings | `B` |
+| Action | Default | Description |
+|---|---|---|
+| Probe with cane | Right-click | Detect blocks ahead |
+| Continuous probe | Right-click (hold) | Sweep multiple blocks |
+| Open settings | `B` | Adjust client config |
 
-Keys can be rebound in Minecraft Controls → Blindness category.
+**Ender Eye tracking** activates automatically upon throwing. No extra input needed.
 
-## Commands
+**Configuration**: press `B` in-game or edit `config/blindness-client.properties`.
 
-| Command | Description |
-|---------|-------------|
-| `/blindness enable` | Enable blindness experience |
-| `/blindness disable` | Restore normal vision and subtitles |
-| `/blindness status` | Show status (enabled/disabled, visual mode, cane proficiency, total falls) |
-| `/blindness reset` | Reset persistent and transient data (requires OP level 2 or creative mode) |
+---
 
-Available in single-player and multiplayer. Use `disable` for accessibility or debugging.
+## Requirements
+
+### Required
+
+- Minecraft 1.21.1
+- Fabric Loader (≥ 0.19.3)
+- Fabric API (≥ 0.116.14)
+- Cardinal Components API (≥ 6.1.3)
+- owo-lib (≥ 0.12.15.4+1.21)
+
+### Recommended
+
+- Veil (≥ 4.3.0) — better visuals and outline rendering
+- Player Animator (≥ 2.0.4) — cane animations
+- Mod Menu (≥ 11.0.4) — in-game settings menu
+
+### Optional
+
+- Sodium — performance, tested compatible
+- Iris — shaders, tested compatible
+
+---
+
+## Installation
+
+1. Install Minecraft 1.21.1 with Fabric Loader
+2. Place all required dependencies into `.minecraft/mods/`
+3. Download `blindness-1.1.0.jar` and place it into `.minecraft/mods/`
+4. Launch the game
+
+> Use the remapped release JAR (e.g. `blindness-1.1.0.jar`). Do not install `-dev.jar` or `-sources.jar`.
+
+---
 
 ## Configuration
 
-Open via **Mod Menu → Blindness → Config** or press `B`.
+Press `B` in-game or edit `config/blindness-client.properties`.
 
-Key settings:
+### Visual
 
-- **Visual**: Outline thickness, brightness, glow, fade timing; menu blackout toggle; held cane visibility.
-- **Accessibility**: Camera shake strength; disable first-person fall tilt; show tutorial.
-- **Sound Awareness**: Creature echo toggle; listening chunk radius (0/1/2); sound block outline radius (0–4); off-screen echoes; echo size/brightness/duration; occlusion blur; max simultaneous echoes.
-- **Compatibility** (requires restart): Map/minimap blocking; block-info HUD blocking; world-visibility blocking; custom add/ignore Mod IDs.
+| Option | Default | Description |
+|---|---|---|
+| enableVisualPostProcessing | true | Veil post-processing (off = HUD fallback) |
+| useDetailedModelOutlines | true | Detailed model outlines |
+| contactHoldTime | 5.00 s | Outline hold duration |
+| contactFadeOutTime | 0.80 s | Outline fade-out duration |
+| keepHeldCaneVisible | true | Keep cane visible when held |
+| blackScreenBehindMenus | true | Black screen behind menus |
 
-Listening radius and block outline range sync to the server and persist in player data.
+### Ore Detection
 
-## Incompatible Mods
+| Option | Default | Description |
+|---|---|---|
+| enableOreHud | true | Show ore HUD |
+| enableOreSound | true | Directional ore sound |
+| oreOutlineDurationTicks | 60 | Ore outline duration (ticks) |
+| maxRenderedOres | 16 | Max simultaneous ore entries |
 
-- **DashLoader** is currently unsupported. Its shader caching system can interfere with Veil shader and post-processing initialization, potentially causing blackout failures, broken detection outlines, or client errors.
-- **Iris shader packs**: Iris itself runs fine, but enabling any shader pack will cause block detection HUD outline rendering errors. Iris is currently only supported with shader packs disabled.
+### Ender Eye Tracking
 
-### Restricted Mods
+| Option | Default | Description |
+|---|---|---|
+| enableEnderEyeTrackingMarker | true | Master toggle |
+| enableEnderEyeWorldMarker | true | On-screen world marker |
+| enableEnderEyeEdgeArrow | true | Off-screen edge arrow |
+| showEnderEyeDistance | true | Show distance |
+| enableEnderEyeTrackingSound | true | Flight tracking sound |
+| enderEyeTrackingSoundIntervalTicks | 25 | Sound interval (10~100 ticks) |
+| droppedEnderEyeMarkerDurationTicks | 180 | Drop marker duration (40~600 ticks) |
+| enableEnderEyeResultHint | true | Result notifications |
 
-The following mod types are detected before entering a world. A conflict screen appears; the conflicting mods must be removed or disabled to proceed. No files are deleted, the game does not crash, and other mod configs are not touched.
+### Sound Awareness
 
-### Map / Minimap
+| Option | Default | Description |
+|---|---|---|
+| entitySoundEchoEnabled | true | Enable sound echoes |
+| listeningChunkRadius | 1 | Listening chunk radius (0~2) |
+| showOffscreenSoundEchoes | true | Show off-screen echoes |
 
-`xaerominimap`, `xaeroworldmap`, `journeymap`, `voxelmap`, `ftbchunks`, `antiqueatlas`, `antique_atlas`, `antique_atlas_4`, `map_atlases`, `mapatlases`
+### Accessibility
 
-### Block-Info HUD
+| Option | Default | Description |
+|---|---|---|
+| cameraShakeStrength | 0.45 | Camera shake intensity |
+| showTutorial | true | Show new-player tutorial |
+| cliffWarningText | true | Cliff warning text |
+| hostileWarningText | true | Hostile warning text |
 
-`jade`, `wthit`, `hwyla`, `waila`, `theoneprobe`
-
-### World Visibility (configurable)
-
-Custom IDs can be added in config.
-
-> This is an experience-integrity check, not security-grade anti-cheat. Client reports can theoretically be modified or faked.
-
-## Allowed Query Mods
-
-The following are never blocked: JEI, REI, EMI, and other recipe/usage-query mods. Hard-allowed IDs: `jei`, `roughlyenoughitems`, `roughlyenoughitems-api`, `emi`.
+---
 
 ## Compatibility
 
-| Environment | Status |
-|-------------|--------|
-| Vanilla Fabric | ✅ Verified |
-| Single-player | ✅ Verified |
-| Multiplayer (client + server) | ✅ Verified |
-| Dedicated server | ✅ Verified (Mod Menu not required) |
-| Sodium | Not fully verified |
-| Iris (no shader pack) | ✅ Verified |
-| Iris (shader pack active) | ❌ Outline rendering broken |
+### Tested With
 
-## Known Issues
+- Sodium
+- Iris (with and without shaders)
+- Veil
+- Singleplayer
+- Fabric multiplayer servers
 
-No confirmed critical issues at this time. If you encounter problems, please file an Issue with your `latest.log`.
+### Known Incompatibility
 
-## Feedback
+- **DashLoader**: unsupported. Its shader cache restoration conflicts with Veil initialization timing. Do not install alongside this mod.
 
-Please submit to [GitHub Issues](https://github.com/ikunkk02-afk/blindness/issues) with:
+For compatibility issues, provide `latest.log`, crash report, full mod list, and reproduction steps.
 
-- Minecraft version & Fabric Loader version
-- Mod version & dependency versions
-- `latest.log` and crash report (if any)
-- Reproduction steps
-- Installed mods list
+---
 
-## Building
+## Multiplayer
 
-```bash
-./gradlew build
+- **Both client and server** must install this mod
+- Starter cane is tracked per-player independently
+- Ore detection is server-confirmed (anti-cheat)
+- Ender Eye markers only show **your own** thrown eyes
+- Server admins can use `/blindness enable/disable` per player
+
+---
+
+## Commands
+
+| Command | Permission | Description |
+|---|---|---|
+| `/blindness enable` | Self | Enable blindness |
+| `/blindness disable` | Self | Disable blindness |
+| `/blindness status` | Self | Show status |
+| `/blindness reset` | OP or Creative | Reset player data |
+
+---
+
+## What's New in 1.1.0
+
+### Added
+
+- Auto-grant starter cane on first join
+- Ore detection system (outlines, HUD, directional sound)
+- Ender Eye shatter notification
+- Ender Eye drop notification
+- On-screen Ender Eye tracking marker (green ring + distance)
+- Off-screen directional edge arrow
+- Dropped Ender Eye item tracking
+- Tracking sound (configurable interval)
+
+### Fixed
+
+- Mixin injection failure causing startup crash
+- Unclear Ender Eye result feedback
+
+### Compatibility
+
+- Rendering compat with Sodium, Iris, and Veil
+- DashLoader remains unsupported
+
+---
+
+## Issues
+
+Report issues at [GitHub Issues](https://github.com/ikunkk02-afk/blindness/issues) with:
+
+```
+Minecraft version:
+Fabric Loader version:
+Mod version:
+Dependency versions:
+Sodium/Iris installed:
+Description:
+Steps to reproduce:
+latest.log:
 ```
 
-Windows:
-
-```powershell
-.\gradlew.bat build
-```
-
-Output in `build/libs/`.
+---
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT License. See `LICENSE` file in the repository.
 
-## Acknowledgements
+---
 
-Built with:
+## Credits
 
-- [Fabric API](https://github.com/FabricMC/fabric)
-- [Veil](https://github.com/FoundryMC/Veil)
+- [Fabric](https://fabricmc.net/) and [Fabric API](https://github.com/FabricMC/fabric)
+- [Veil](https://github.com/FoundryMC/Veil) — rendering framework
 - [Cardinal Components API](https://github.com/Ladysnake/Cardinal-Components-API)
 - [owo-lib](https://github.com/wisp-forest/owo-lib)
 - [Player Animator](https://github.com/KosmX/playerAnimator)
-- [Mod Menu](https://github.com/TerraformersMC/ModMenu)
+- Players and viewers who tested and provided feedback

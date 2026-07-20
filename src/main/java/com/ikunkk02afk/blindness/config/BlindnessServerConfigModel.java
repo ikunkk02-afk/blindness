@@ -20,6 +20,22 @@ public class BlindnessServerConfigModel {
     @RangeConstraint(min = 32, max = 512)
     public int maxPathNodes = 192;
 
+    @SectionHeader("ore_detection")
+    public boolean giveStarterCane = true;
+    public boolean enableOreDetection = true;
+    public boolean enableOreSound = true;
+    @RangeConstraint(min = 10, max = 200)
+    public int oreOutlineDurationTicks = 60;
+    @RangeConstraint(min = 1, max = 64)
+    public int maxRenderedOres = 16;
+
+    @Deprecated
+    @ExcludeFromScreen
+    public boolean enableOreHud = true;  // driven by client config
+
+    @SectionHeader("ender_eye")
+    public boolean enableEnderEyeResultHint = true;
+
     @SectionHeader("cliff")
     public boolean cliffWarningsEnabled = true;
 
